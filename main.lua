@@ -15,6 +15,7 @@ local Helper = MusicEditing.Helper
 local style = dofile("test-style.lua")
 
 local melodySong = Song.buildFromFile("country-road-melody-short.mid")
+-- local melodySong = Song.buildFromFile("Debug/tempo-test.mid")
 -- local melodySong = Song.buildFromFile("c_major_scale.mid")
 -- local melodySong = Song.buildFromFile("offset-2.mid")
 local melodyTrack = melodySong:getTracks()[#melodySong:getTracks()]

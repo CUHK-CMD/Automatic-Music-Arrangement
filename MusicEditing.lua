@@ -114,32 +114,35 @@ MusicEditing.Song = {
 			track:sortEventsByTime()	-- not needed if every operation manage the order correctly, just in case it is not the case
 			
 			local rawTrack = LuaMidi.Track.new()
-			rawTrack:add_events(LuaMidi.ProgramChangeEvent.new(1, track:getInstrument()))
-			rawTrack:set_tempo(self.tempo)
-			rawTrack:set_name(track:getName())
+			-- rawTrack:add_events(LuaMidi.ProgramChangeEvent.new(1, track:getInstrument()))
 			
 			local rawEvents = {}
-			
 			local events = track:getEvents()
 			local previousEventTime = 0
 			for j, event in ipairs(events) do
 				local time = event:getTime()
 				local rawEvent = event:getRawEvent()
 				
-				-- CAUTION: it causes a side effect (changed the original raw event's time)
-				rawEvent:set_timestamp(round((time - previousEventTime) * self.timeDivision))
-				
-				previousEventTime = time
-				
-				rawEvents[#rawEvents+1] = rawEvent
-				
-				-- print(rawEvent, rawEvent.timestamp)
-				-- for i,v in ipairs(LuaMidi.Util.num_to_var_length(rawEvent.timestamp)) do
-					-- print("",i,v)
-				-- end
+				if (rawEvent.type ~= "meta") then
+					-- CAUTION: it causes a side effect (changed the original raw event's time)
+					rawEvent:set_timestamp(round((time - previousEventTime) * self.timeDivision))
+					
+					previousEventTime = time
+					
+					rawEvents[#rawEvents+1] = rawEvent
+					
+					-- print(rawEvent, rawEvent.timestamp)
+					-- for i,v in ipairs(LuaMidi.Util.num_to_var_length(rawEvent.timestamp)) do
+						-- print("",i,v)
+					-- end
+				end
 			end
 			
+			rawTrack:set_tempo(self.tempo)
+			rawTrack:set_time_signature(self.timeSignature[1], self.timeSignature[2])
 			rawTrack:add_events(rawEvents)
+			rawTrack:set_name(track:getName())
+			
 			rawTracks[#rawTracks+1] = rawTrack
 		end
 		

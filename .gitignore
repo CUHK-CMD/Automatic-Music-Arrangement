@@ -1,5 +1,7 @@
 LuaMidi
 Debug
+test.mid
+result.mid
 
 # Compiled Lua sources
 luac.out
