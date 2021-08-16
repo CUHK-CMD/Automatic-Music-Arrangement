@@ -12,7 +12,7 @@ local Helper = MusicEditing.Helper
 -- The following lines of code is only for demonstration
 -- Please remove them and write a proper version
 ------------------------------------------------------------
-
+local helporversion = false
 local arguments = {input, style, output, settings}
 function readCommand(flag, argnum)
 	if (flag == "-i" or flag == "--input")
@@ -65,6 +65,7 @@ function readCommand(flag, argnum)
 			end
 		else if (flag == "-h" or flag == "-v" or flag == "--version" or flag == "--help")
 		then
+			helporversion = true
 			if (argnum ~= 1 or arg[2] ~= nil)
 			then
 				print("Please use this flag in single argument!")
@@ -78,7 +79,7 @@ function readCommand(flag, argnum)
 					"-c, --settings SETTINGS_FILE_PATH\n",
 					"example: Lua main.lua -i melody.mid -o arrangement.mid -s style.lua -c settings.lua")
 				else
-					print("Version 0, powered by LAI MAN HIN")
+					print("Version 0")
 				end
 			end
 		else
@@ -153,4 +154,20 @@ local arrangementContext = ArrangementContext.new(
 -- melodySong:export("test.mid")
 style.arrange(arrangementContext)
 song:export(arguments[output])
+print("Successfully saved as ", arguments[output])
+else
+	if (helporversion == false)
+		if (arguments[input] == nil)
+			print("Input is missing!")
+		end
+		if (arguments[output] == nil)
+			print("Output is missing!")
+		end
+		if (arguments[style] == nil)
+			print("Style file is missing!")
+		end
+		if (arguments[settings] == nil)
+			print("Setting file is missing!")
+		end
+	end
 end
