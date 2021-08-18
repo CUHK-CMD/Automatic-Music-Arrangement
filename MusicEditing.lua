@@ -260,7 +260,34 @@ MusicEditing.Track = {
 	end,
 	
 	updateNoteOnOffEventPairs = function (self)
-		-- TO BE IMPLEMENTED
+		--[[
+		temp=0
+		temp1=0
+		A={}
+		B={}
+		for j, rawEvent in ipairs(rawTrack:get_events()) do
+			if (event.rawtype=="note_on")
+			then
+				A[temp]=j
+				temp=temp+1
+			else
+				B[temp1]=j
+				temp1=temp1+1
+			end
+		end
+		temp=0
+		temp1=0
+		for j,rawEvent in ipairs(rawTrack:get_events()) do
+			if (event.rawtype=="note_on")
+			then
+				MusicEditing.rawEvent.setAnotherEvent(B[temp1])	
+				temp1=temp1+1
+			else
+				MusicEditing.rawEvent.setAnotherEvent(A[temp])
+				temp=temp+1	
+			end
+		end
+		--]]
 	end,
 	
 	-- Assume: time signature is a constant
@@ -430,7 +457,7 @@ MusicEditing.NoteOnOffEvent.buildFromRawEvent = function (song, time, rawEvent)
 	self.anotherEvent = nil
 	return setmetatable(self, { __index = MusicEditing.NoteOnOffEvent })
 end
-
+	
 -------------------------------------------------
 ---- Class: MusicEditing.ArrangementContext
 -------------------------------------------------
