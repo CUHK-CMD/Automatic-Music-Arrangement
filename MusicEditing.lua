@@ -170,7 +170,7 @@ MusicEditing.Song.buildFromFile = function(filename, ignoreNonNoteEvent)
 	
 	local tempo
 	local timeSignature
-	
+
 	for i, rawTrack in ipairs(originalTracks) do
 		if tempo == nil then
 			tempo = rawTrack:get_tempo()
@@ -260,13 +260,21 @@ MusicEditing.Track = {
 	end,
 	
 	updateNoteOnOffEventPairs = function (self)
-		--[[
+		--local originalTracks, timeDivision = LuaMidi.get_MIDI_tracks(filename);
+	local self = MusicEditing.Song.new(timeDivision)
+	
+	local tempo
+	local timeSignature
+	print(self.tracks)
 		temp=0
 		temp1=0
 		A={}
 		B={}
+		for i, rawTrack in pairs(self.tracks) do
+			--print("1")
 		for j, rawEvent in ipairs(rawTrack:get_events()) do
-			if (event.rawtype=="note_on")
+			--print(rawEvent.type)
+			if (rawEvent.type=="note_on")
 			then
 				A[temp]=j
 				temp=temp+1
@@ -275,8 +283,10 @@ MusicEditing.Track = {
 				temp1=temp1+1
 			end
 		end
+	end
 		temp=0
 		temp1=0
+		for i, rawTrack in ipairs(self.tracks) do
 		for j,rawEvent in ipairs(rawTrack:get_events()) do
 			if (event.rawtype=="note_on")
 			then
@@ -286,10 +296,9 @@ MusicEditing.Track = {
 				MusicEditing.rawEvent.setAnotherEvent(A[temp])
 				temp=temp+1	
 			end
-		end
-		--]]
-	end,
-	
+		end end
+	end
+	,
 	-- Assume: time signature is a constant
 	-- TODO: support varying time signature
 	getBarTime = function(self, barNumber)
@@ -517,4 +526,4 @@ MusicEditing.Helper = {
 
 
 -------------------------------------------------
-return MusicEditing
+return MusicEditing	
