@@ -184,7 +184,7 @@ function mainRun()	--main part for the running of program, after checking it is 
 	local arrangementContext = ArrangementContext.new(
 		song,
 		melodyTrack,
-		settings.key or { p2n("A"), p2n("B"), p2n("C#"), p2n("D"), p2n("E"), p2n("F#"), p2n("G#") },
+		settings.key or { p2n("A"), p2n("B"), p2n("C#"), p2n("D"), p2n("E"), p2n("F#"), p2n("G#") }, --soon replaced by MusicAnalysis.MusicAnalyser.estimateKey(song)
 		settings.chordProgression or {
 			chordG, chordEm, chordD, chordC, 
 			
@@ -195,7 +195,7 @@ function mainRun()	--main part for the running of program, after checking it is 
 			chordG, chordD, chordC, chordG,
 			
 			chordG
-		},
+		},	--soon replaced by MusicAnalysis.MusicAnalyser.estimateChordProgression(song)
 			settings.sectionSeparation,
 		Song.buildFromFile(style.resourceFilename)
 	)
