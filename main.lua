@@ -13,99 +13,155 @@ local Helper = MusicEditing.Helper
 -- Please remove them and write a proper version
 ------------------------------------------------------------
 local helporversion = false
-local arguments = {input, style, output, settings}
+local songExport = nil
+local melodySong = nil
+local arguments = {"input", "style", "output", "settings"}
+local style = nil
+
+local settings = nil
+
 function readCommand(flag, argnum)
 	if (flag == "-i" or flag == "--input")
-		then
-			flag = "input"
-			if (arguments[flag] == nil)
-			then
-				arguments[flag] = arg[argnum+1]
-				local melodySong = Song.buildFromFile(arguments[flag])
-				argnumber = argnumber + 1
-				--print("i")
-			else
-				print("Repeated input flag!")
-			end
-			
-		else if (flag == "-s" or flag == "--style")
-		then
-			flag = "style"
-			if (arguments[flag] == nil)
-			then
-				arguments[flag] = arg[argnum+1]
-				local style = dofile(arguments[flag]) 
-				argnumber = argnumber + 1
-				--print("s")
-			else
-				print("Repeated style flag!")
-			end
-		else if (flag == "-o" or flag == "--output")
-		then
-			flag = "output"
-			if (arguments[flag] == nil)
-			then
-				arguments[flag] = arg[argnum+1]
-				local songExport = arguments[flag]
-				argnumber = argnumber + 1
-				--print("o")
-			else
-				print("Repeated output flag!")
-			end
-		else if (flag == "-c" or flag == "--settings")
-		then
-			flag = "settings"
-			if (arguments[flag] == nil)
-			then
-				arguments[flag] = arg[argnum+1]
-				argnumber = argnumber + 1
-				--print("c")
-			else
-				print("Repeated settings flag!")
-			end
-		else if (flag == "-h" or flag == "-v" or flag == "--version" or flag == "--help")
-		then
-			helporversion = true
-			if (argnum ~= 1 or arg[2] ~= nil)
-			then
-				print("Please use this flag in single argument!")
-			else if (flag == "-h" or flag == "--help")
-				then
-					print("-h, --help\n",
-					"-v, --version\n",
-					"-i, --input MELODY_FILE_PATH\n",
-					"-s, --style STYLE_FILE_PATH\n",
-					"-o, --output OUTPUT_FILE_PATH\n",
-					"-c, --settings SETTINGS_FILE_PATH\n",
-					"example: Lua main.lua -i melody.mid -o arrangement.mid -s style.lua -c settings.lua")
-				else
-					print("Version 0")
-				end
-			end
-		else
-			print("This flag is not available!")
-	end end end end end
-	
-end
-
-if (arg[9] ~= nil)
 	then
-	print("Too much arguments!")
-	else if (arg[1] == nil)
+		flag = "input"
+		if (arguments[flag] == nil)
 		then
-		print("Please input proper argument for input and output! Use command "-h" or "-help" for more details")
-		else
-		argnumber = 1
-		while (argnumber <= 8 and arg[argnumber] ~= nil)
-		do
-			readCommand(arg[argnumber], argnumber)
+			arguments[flag] = arg[argnum+1]
+			if (not pcall(Song.buildFromFile, arguments[flag]))
+			then
+				print("Error: ", arguments[flag], " not found!")
+				os.exit()
+			end
+			melodySong = Song.buildFromFile(arguments[flag])
 			argnumber = argnumber + 1
+			--print("i")
+		else
+			print("Repeated input flag!")
+			os.exit()
 		end
+			
+	elseif (flag == "-s" or flag == "--style")
+	then
+		flag = "style"
+		if (arguments[flag] == nil)
+		then
+			arguments[flag] = arg[argnum+1]
+			if (not pcall(dofile, arguments[flag]))
+			then
+				print("Error! ", arguments[flag], " not found!")
+				os.exit()
+			end
+			style = dofile(arguments[flag]) 
+			argnumber = argnumber + 1
+			--print("s")
+		else
+			print("Repeated style flag!")
+			os.exit()
+		end
+	elseif (flag == "-o" or flag == "--output")
+	then
+		flag = "output"
+		if (arguments[flag] == nil)
+		then
+			arguments[flag] = arg[argnum+1]
+			songExport = arguments[flag]
+			argnumber = argnumber + 1
+			--print("o")
+		else
+			print("Repeated output flag!")
+			os.exit()
+		end
+	elseif (flag == "-c" or flag == "--settings")
+	then
+		flag = "settings"
+		if (arguments[flag] == nil)
+		then
+			arguments[flag] = arg[argnum+1]
+			if (not pcall(dofile, arguments[flag]))
+			then
+				print("Error: ", arguments[flag], " not found!")
+				os.exit()
+			end
+			settings = dofile(arguments[flag])
+			if (settings.sectionSeparation == nil)
+			then
+				print("sectionSeparation is missing! It is compulsory!")
+				os.exit()
+			end
+			argnumber = argnumber + 1
+			--print("c")
+		else
+			print("Repeated settings flag!")
+			os.exit()
+		end
+	elseif (flag == "-h" or flag == "-v" or flag == "--version" or flag == "--help")
+	then
+		helporversion = true
+		if (argnum ~= 1 or arg[2] ~= nil)
+		then
+			print("Please use",flag,"flag in single argument!")
+			os.exit()
+		elseif (flag == "-h" or flag == "--help")
+		then
+			print("	-h, --help (Please use it in a single argument)\n",
+			"-v, --version (Please use it in a single argument)\n",
+			"-i, --input MELODY_FILE_PATH\n",
+			"-s, --style STYLE_FILE_PATH\n",
+			"-o, --output OUTPUT_FILE_PATH\n",
+			"-c, --settings SETTINGS_FILE_PATH\n",
+			"example: Lua main.lua -i melody.mid -o arrangement.mid -s style.lua -c settings.lua")
+			os.exit()
+		else
+			print("Version 0")
+			os.exit()
+		end
+	else
+		print("This flag is not available!")
+		os.exit()
 	end
 end
 
-if (arguments[input] ~= nil and arguments[style] ~= nil and arguments[output] ~= nil and arguments[settings] ~= nil)
+if (arg[9] ~= nil)
 then
+	print("Too much arguments!")
+	return
+elseif (arg[1] == nil)
+then
+	print("Please input proper argument for input and output! Use command \"-h\" or \"-help\" for more details")
+	return
+else
+	argnumber = 1
+	while (argnumber <= 8 and arg[argnumber] ~= nil)
+	do
+		readCommand(arg[argnumber], argnumber)
+		argnumber = argnumber + 1
+	end
+end
+
+if (not (arguments["input"] ~= nil and arguments["style"] ~= nil and arguments["output"] ~= nil and arguments["settings"] ~= nil))
+then
+	if (helporversion == false)
+	then
+		if (arguments["input"] == nil)
+		then
+			print("Input is missing!")
+		end
+		if (arguments["output"] == nil)
+		then
+			print("Output is missing!")
+		end
+		if (arguments["style"] == nil)
+		then
+			print("Style file is missing!")
+		end
+		if (arguments["settings"] == nil)
+		then
+			print("Setting file is missing!")
+		end
+		return
+	end
+end
+
 -- local melodySong = Song.buildFromFile("Debug/tempo-test.mid")
 -- local melodySong = Song.buildFromFile("c_major_scale.mid")
 -- local melodySong = Song.buildFromFile("offset-2.mid")
@@ -114,10 +170,11 @@ local melodyTrack = melodySong:getTracks()[#melodySong:getTracks()]
 -- print(melodySong:getTimeDivision())
 local song = Song.new(
 	melodySong:getTimeDivision(),
-	melodySong:getTimeSignature(),
-	melodySong:getTempo()
+	settings.timeSignature or melodySong:getTimeSignature(),
+	settings.tempo or melodySong:getTempo()
 )
 
+print(song.tempo)
 local p2n = Helper.pitchNameToNumber
 
 local chordG = { p2n("G"), p2n("B"), p2n("D") }
@@ -130,8 +187,8 @@ local chordC7 = { p2n("C"), p2n("E"), p2n("G"), p2n("A#") }
 local arrangementContext = ArrangementContext.new(
 	song,
 	melodyTrack,
-	{ p2n("A"), p2n("B"), p2n("C#"), p2n("D"), p2n("E"), p2n("F#"), p2n("G#") },
-	{
+	settings.key or { p2n("A"), p2n("B"), p2n("C#"), p2n("D"), p2n("E"), p2n("F#"), p2n("G#") },
+	settings.chordProgression or {
 		chordG, chordEm, chordD, chordC, 
 		
 		chordG, chordEm, chordD, {chordC, chordG},
@@ -142,32 +199,10 @@ local arrangementContext = ArrangementContext.new(
 		
 		chordG
 	},
-	{
-		{"intro", 1},
-		{"verse", 5},
-		{"chrous", 13},
-		{"outro", 20},
-		{"_finish", 21},
-	},
+		settings.sectionSeparation,
 	Song.buildFromFile(style.resourceFilename)
 )
 -- melodySong:export("test.mid")
 style.arrange(arrangementContext)
-song:export(arguments[output])
-print("Successfully saved as ", arguments[output])
-else
-	if (helporversion == false)
-		if (arguments[input] == nil)
-			print("Input is missing!")
-		end
-		if (arguments[output] == nil)
-			print("Output is missing!")
-		end
-		if (arguments[style] == nil)
-			print("Style file is missing!")
-		end
-		if (arguments[settings] == nil)
-			print("Setting file is missing!")
-		end
-	end
-end
+song:export(arguments["output"])
+print("Successfully saved as ", arguments["output"])
