@@ -265,50 +265,58 @@ MusicEditing.Track = {
 	
 	local tempo
 	local timeSignature
-	print(self.tracks)
+	--print(self.tracks)
 		temp=0
 		temp1=0
 		A={}
 		B={}
-		for i, rawTrack in pairs(self.tracks) do
-			--print("1")
-		for j, rawEvent in ipairs(rawTrack:get_events()) do
-			--print(rawEvent.type)
-			if (rawEvent.type=="note_on")
-			then
-				A[temp]=j
-				temp=temp+1
-			else
-				B[temp1]=j
-				temp1=temp1+1
+		--print(type(self))
+		for i, rawTrack in ipairs(self.tracks) do
+			--print("a")
+			for j, rawEvent in ipairs(rawTrack:get_events()) do
+				if (rawEvent.type=="note_on")
+				then
+					A[temp]=j
+					temp=temp+1
+				else
+					B[temp1]=j
+					temp1=temp1+1
+				end
+			--print(rawEvent.type, A[temp],B[temp1])
 			end
 		end
-	end
 		temp=0
 		temp1=0
 		for i, rawTrack in ipairs(self.tracks) do
-		for j,rawEvent in ipairs(rawTrack:get_events()) do
-			if (event.rawtype=="note_on")
-			then
-				MusicEditing.rawEvent.setAnotherEvent(B[temp1])	
-				temp1=temp1+1
-			else
-				MusicEditing.rawEvent.setAnotherEvent(A[temp])
-				temp=temp+1	
-			end
-		end end
-	end
-	,
+			for j,rawEvent in ipairs(rawTrack:get_events()) do
+				if (event.rawtype=="note_on")
+				then
+					MusicEditing.rawEvent.setAnotherEvent(B[temp1])	
+					print(event.rawEvent.anotherEvent)
+					temp1=temp1+1
+				else
+					MusicEditing.rawEvent.setAnotherEvent(A[temp])
+					print(event.rawEvent.anotherEvent)
+					temp=temp+1	
+				end
+			end 
+		end
+	end,
 	-- Assume: time signature is a constant
 	-- TODO: support varying time signature
 	getBarTime = function(self, barNumber)
+		--print(self.song.timeSignature[1] * (4/self.song.timeSignature[2]) * (barNumber-1))
 		return self.song.timeSignature[1] * (4/self.song.timeSignature[2]) * (barNumber-1) 
 	end,
 
 	getBarEvents = function(self, barNumber, barCount)
 		local startTime = self:getBarTime(barNumber)
+		--print(barNumber)
+		--print(startTime)
+		--print(barCount)
 		local endTime = self:getBarTime(barNumber+barCount)
-			
+		--print(endTime)
+		--print(barCount)	
 		local events = {}
 		
 		for i, event in ipairs(self:getEvents()) do
@@ -336,13 +344,51 @@ MusicEditing.Track = {
 	
 	copyBarFrom = function(self, sourceTrack, barNumber, barCount, targetBarNumber)
 		local timeOffset = self:getBarTime(targetBarNumber)
+		--print(timeOffset)
+		--print(targetBarNumber)
 		local source = sourceTrack:getBarEvents(barNumber, barCount)
+		--print(sourceTrack)
 		for i, sourceEvent in ipairs(source) do
 			local clonedEvent = sourceEvent:clone()
+			--print(clonedEvent)
 			clonedEvent:setTime(sourceEvent:getTime() - sourceTrack:getBarTime(barNumber) + timeOffset)
 			self:addEvent(clonedEvent)
 		end
-		
+		temp=0
+		temp1=0
+		A={}
+		B={}
+		for i,event in ipairs(self.events) do
+			--print(i)
+			if (event.rawEvent.type=="note_on")
+			then
+				A[temp]=event.time
+				temp=temp+1
+			end
+			if (event.rawEvent.type=="note_off")
+			then
+				B[temp1]=event.time
+				temp1=temp1+1
+			end
+			--print("b")
+			--print(event.rawEvent.type)
+			--print(type(event.time))
+		end
+		--print(type(A[i]))
+		--print(self.song.timeDivision)
+		for i=0,temp,1 do
+			--print("i",i)
+			for j=math.ceil(A[i]),math.floor(B[i]),1 do
+				--print("j",j)
+				--print(type(math.ceil(A[i])))
+				if (j%4==0)
+				then
+					--NoteOnOffEvent.setAnotherEvent("note_on")
+                    --NoteOnOffEvent.setAnotherEvent("note_off")
+				end
+				--updateNoteOnOffEventPairs()
+			end
+		end
 		-- self:sortEventsByTime()
 	end,
 	
@@ -526,4 +572,4 @@ MusicEditing.Helper = {
 
 
 -------------------------------------------------
-return MusicEditing	
+return MusicEditing
