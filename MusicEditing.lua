@@ -260,7 +260,22 @@ MusicEditing.Track = {
 	end,
 	
 	updateNoteOnOffEventPairs = function (self)
-		-- TO BE IMPLEMENTED
+		local queue = {element = {}, start = 1, final = 0}
+		for i, event in ipairs(self.events) do
+			--print(i, event, event.rawEvent.type)
+			if (event.rawEvent.type == "note_on")
+			then
+				queue.final = queue.final + 1
+				queue.element[queue.final] = i
+			elseif (event.rawEvent.type == "note_off")
+			then
+				--print("setanotherevent:", event, event.rawEvent.type, self.events[queue.element[queue.start]], self.events[queue.element[queue.start]].rawEvent.type)
+				event:setAnotherEvent(self.events[queue.element[queue.start]])
+				self.events[queue.element[queue.start]]:setAnotherEvent(event)
+				queue.start = queue.start + 1
+			end
+		end
+		
 	end,
 	
 	-- Assume: time signature is a constant
@@ -302,15 +317,40 @@ MusicEditing.Track = {
 		local timeOffset = self:getBarTime(targetBarNumber)
 		local source = sourceTrack:getBarEvents(barNumber, barCount)
 		for i, sourceEvent in ipairs(source) do
+			if (sourceEvent.anotherEvent ~= nil)
+			then
+				if (sourceEvent.anotherEvent.time < sourceTrack:getBarTime(barNumber))
+				then
+					local splitEvent = sourceEvent.anotherEvent:clone()
+					splitEvent:setTime(sourceTrack:getBarTime(targetBarNumber))
+					self:addEvent(splitEvent)
+				elseif (sourceEvent.anotherEvent.time > sourceTrack:getBarTime(barNumber+barCount))
+				then
+					local splitEvent = sourceEvent.anotherEvent:clone()
+					splitEvent:setTime(sourceTrack:getBarTime(targetBarNumber+barCount))
+					self:addEvent(splitEvent)
+				end
+			end
 			local clonedEvent = sourceEvent:clone()
 			clonedEvent:setTime(sourceEvent:getTime() - sourceTrack:getBarTime(barNumber) + timeOffset)
 			self:addEvent(clonedEvent)
 		end
-		
+		self:updateNoteOnOffEventPairs()
 		-- self:sortEventsByTime()
 	end,
 	
-	
+	editPitchByBar = function(self, sourceTrack, barNumber, barCount, strIncrement)
+		local source = sourceTrack:getBarEvents(barNumber, barCount)
+		local pitchIncrement = tonumber(strIncrement)
+		for i, event in ipairs (source) do
+			if (event.rawEvent.type == "note_on")
+			then
+				event:setPitch(event:getPitch() + pitchIncrement)
+				event.anotherEvent:setPitch(event:getPitch())
+			end
+		end
+
+	end,
 }
 setmetatable(MusicEditing.Track, { __index = Object })	-- inherits Object
 MusicEditing.Track.new = function (song, name, instrument)
