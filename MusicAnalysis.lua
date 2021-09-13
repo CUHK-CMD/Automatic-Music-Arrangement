@@ -24,17 +24,52 @@ local p2n = Helper.pitchNameToNumber
 local n2p = Helper.pitchNumberToName
 
 -- Table of chords
--- I assume there are no inversions or 7th chords first
-local chords = {
-	{"C",  p2n("C"), p2n("E"), p2n("G")},
-	{"Dm", p2n("D"), p2n("F"), p2n("A")},
-	{"Em", p2n("E"), p2n("G"), p2n("B")},
-	{"F",  p2n("F"), p2n("A"), p2n("C")},
-	{"G",  p2n("G"), p2n("B"), p2n("D")},
-	{"Am", p2n("A"), p2n("C"), p2n("E")},
-	{"Bo", p2n("B"), p2n("D"), p2n("F")},
+-- I assume there are no inversions first, but it can be easily implemented
+
+-- Old hard coded chords
+--local chords = {
+--	{"C",  p2n("C"), p2n("E"), p2n("G")},
+--	{"Dm", p2n("D"), p2n("F"), p2n("A")},
+--	{"Em", p2n("E"), p2n("G"), p2n("B")},
+--	{"F",  p2n("F"), p2n("A"), p2n("C")},
+--	{"G",  p2n("G"), p2n("B"), p2n("D")},
+--	{"Am", p2n("A"), p2n("C"), p2n("E")},
+--	{"Bo", p2n("B"), p2n("D"), p2n("F")},
+--}
+
+local chords = {}
+
+local chordsInterval = {
+	{"", 0, 4, 7},
+	{"7", 0, 4, 7, 11},
+	{"m", 0, 3, 7},
+	{"o", 0, 3, 6},
+	{"+", 0, 4, 8}
 }
+
+for i = 1,12 do
+	for _,intervalTable in ipairs(chordsInterval) do
+		local tempChord = {n2p(i)..intervalTable[1]}
+		for j,interval in ipairs(intervalTable) do
+			if j > 1 then
+				table.insert(tempChord, (i - 1 + interval) % 12 + 1)
+			end
+		end
+		table.insert(chords, tempChord)
+	end
+end
+
 local numberOfChords = #chords
+
+for i = 1,numberOfChords do
+	if #chords[i] > 4 then
+		print(chords[i][1], chords[i][2], chords[i][3], chords[i][4], chords[i][5])
+		print("", n2p(chords[i][2]), n2p(chords[i][3]), n2p(chords[i][4]), n2p(chords[i][5]))
+	else
+		print(chords[i][1], chords[i][2], chords[i][3], chords[i][4])
+		print("", n2p(chords[i][2]), n2p(chords[i][3]), n2p(chords[i][4]))
+	end
+end
 
 -- Table of scales
 -- Used for estimateKey
