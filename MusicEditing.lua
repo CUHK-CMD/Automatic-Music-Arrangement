@@ -52,6 +52,10 @@ MusicEditing.Song = {
 			str = str .. string.format("\tTrack %s: %s\n", i, track)
 			for j, event in ipairs(track.events) do
 				str = str .. string.format("\t\tEvent %s: %s (%s %s)\n", j, event, event.time, event.rawEvent.type)
+				--[[if (event.rawEvent.type == "note_on" or event.rawEvent.type == "note_off")
+				then
+					str = str .. string.format("pitch: %s, channel: %s, another event: %s", event:getPitch(), event:getChannel(), event:getAnotherEvent())
+				end--]]
 			end
 		end
 		return str
@@ -260,19 +264,29 @@ MusicEditing.Track = {
 	end,
 	
 	updateNoteOnOffEventPairs = function (self)
-		local queue = {element = {}, start = 1, final = 0}
+		local queue = {{}}
 		for i, event in ipairs(self.events) do
 			--print(i, event, event.rawEvent.type)
 			if (event.rawEvent.type == "note_on")
 			then
-				queue.final = queue.final + 1
-				queue.element[queue.final] = i
+				local channel = event:getChannel()
+				local pitch = event:getPitch()
+				--print(channel, pitch)
+				if (queue[channel][pitch] == nil)
+				then
+					queue[channel][pitch] = {element = {}, start = 1, final = 0}
+				end
+				queue[channel][pitch].final = queue[channel][pitch].final + 1
+				queue[channel][pitch].element[queue[channel][pitch].final] = i
 			elseif (event.rawEvent.type == "note_off")
 			then
-				--print("setanotherevent:", event, event.rawEvent.type, self.events[queue.element[queue.start]], self.events[queue.element[queue.start]].rawEvent.type)
-				event:setAnotherEvent(self.events[queue.element[queue.start]])
-				self.events[queue.element[queue.start]]:setAnotherEvent(event)
-				queue.start = queue.start + 1
+				local channel = event:getChannel()
+				local pitch = event:getPitch()
+				--print("setanotherevent:", event, event.rawEvent.type, self.events[queue[channel][pitch].element[queue[channel][pitch].start]], self.events[queue[channel][pitch].element[queue[channel][pitch].start]].rawEvent.type)
+				event:setAnotherEvent(self.events[queue[channel][pitch].element[queue[channel][pitch].start]])
+				self.events[queue[channel][pitch].element[queue[channel][pitch].start]]:setAnotherEvent(event)
+				--print(self.events[queue[channel][pitch].element[queue[channel][pitch].start]], self.events[queue[channel][pitch].element[queue[channel][pitch].start]]:getPitch(), event, event:getPitch())
+				queue[channel][pitch].start = queue[channel][pitch].start + 1
 			end
 		end
 		
