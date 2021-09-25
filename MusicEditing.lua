@@ -170,7 +170,7 @@ MusicEditing.Song.buildFromFile = function(filename, ignoreNonNoteEvent)
 	
 	local tempo
 	local timeSignature
-	
+
 	for i, rawTrack in ipairs(originalTracks) do
 		if tempo == nil then
 			tempo = rawTrack:get_tempo()
@@ -260,19 +260,63 @@ MusicEditing.Track = {
 	end,
 	
 	updateNoteOnOffEventPairs = function (self)
-		-- TO BE IMPLEMENTED
-	end,
+		--local originalTracks, timeDivision = LuaMidi.get_MIDI_tracks(filename);
+	local self = MusicEditing.Song.new(timeDivision)
 	
+	local tempo
+	local timeSignature
+	--print(self.tracks)
+		temp=0
+		temp1=0
+		A={}
+		B={}
+		--print(type(self))
+		for i, rawTrack in ipairs(self.tracks) do
+			--print("a")
+			for j, rawEvent in ipairs(rawTrack:get_events()) do
+				if (rawEvent.type=="note_on")
+				then
+					A[temp]=j
+					temp=temp+1
+				else
+					B[temp1]=j
+					temp1=temp1+1
+				end
+			--print(rawEvent.type, A[temp],B[temp1])
+			end
+		end
+		temp=0
+		temp1=0
+		for i, rawTrack in ipairs(self.tracks) do
+			for j,rawEvent in ipairs(rawTrack:get_events()) do
+				if (event.rawtype=="note_on")
+				then
+					MusicEditing.rawEvent.setAnotherEvent(B[temp1])	
+					print(event.rawEvent.anotherEvent)
+					temp1=temp1+1
+				else
+					MusicEditing.rawEvent.setAnotherEvent(A[temp])
+					print(event.rawEvent.anotherEvent)
+					temp=temp+1	
+				end
+			end 
+		end
+	end,
 	-- Assume: time signature is a constant
 	-- TODO: support varying time signature
 	getBarTime = function(self, barNumber)
+		--print(self.song.timeSignature[1] * (4/self.song.timeSignature[2]) * (barNumber-1))
 		return self.song.timeSignature[1] * (4/self.song.timeSignature[2]) * (barNumber-1) 
 	end,
 
 	getBarEvents = function(self, barNumber, barCount)
 		local startTime = self:getBarTime(barNumber)
+		--print(barNumber)
+		--print(startTime)
+		--print(barCount)
 		local endTime = self:getBarTime(barNumber+barCount)
-			
+		--print(endTime)
+		--print(barCount)	
 		local events = {}
 		
 		for i, event in ipairs(self:getEvents()) do
@@ -300,13 +344,51 @@ MusicEditing.Track = {
 	
 	copyBarFrom = function(self, sourceTrack, barNumber, barCount, targetBarNumber)
 		local timeOffset = self:getBarTime(targetBarNumber)
+		--print(timeOffset)
+		--print(targetBarNumber)
 		local source = sourceTrack:getBarEvents(barNumber, barCount)
+		--print(sourceTrack)
 		for i, sourceEvent in ipairs(source) do
 			local clonedEvent = sourceEvent:clone()
+			--print(clonedEvent)
 			clonedEvent:setTime(sourceEvent:getTime() - sourceTrack:getBarTime(barNumber) + timeOffset)
 			self:addEvent(clonedEvent)
 		end
-		
+		temp=0
+		temp1=0
+		A={}
+		B={}
+		for i,event in ipairs(self.events) do
+			--print(i)
+			if (event.rawEvent.type=="note_on")
+			then
+				A[temp]=event.time
+				temp=temp+1
+			end
+			if (event.rawEvent.type=="note_off")
+			then
+				B[temp1]=event.time
+				temp1=temp1+1
+			end
+			--print("b")
+			--print(event.rawEvent.type)
+			--print(type(event.time))
+		end
+		--print(type(A[i]))
+		--print(self.song.timeDivision)
+		for i=0,temp,1 do
+			--print("i",i)
+			for j=math.ceil(A[i]),math.floor(B[i]),1 do
+				--print("j",j)
+				--print(type(math.ceil(A[i])))
+				if (j%4==0)
+				then
+					--NoteOnOffEvent.setAnotherEvent("note_on")
+                    --NoteOnOffEvent.setAnotherEvent("note_off")
+				end
+				--updateNoteOnOffEventPairs()
+			end
+		end
 		-- self:sortEventsByTime()
 	end,
 	
@@ -430,7 +512,7 @@ MusicEditing.NoteOnOffEvent.buildFromRawEvent = function (song, time, rawEvent)
 	self.anotherEvent = nil
 	return setmetatable(self, { __index = MusicEditing.NoteOnOffEvent })
 end
-
+	
 -------------------------------------------------
 ---- Class: MusicEditing.ArrangementContext
 -------------------------------------------------
@@ -488,6 +570,141 @@ MusicEditing.Helper = {
 	end,
 }
 
+--chord adaption
+
+local notesTable = {
+	{{"E4"}, {"D4"}, {"C4"}, {"D4"}},
+	{"E4"}, {"E4"}, {"E4"}, {"E4"},
+	{"D4"}, {"D4"}, {"D4"}, {"D4"},
+	{"E4"}, {"G4"}, {"G4"}, {"G4"},
+	{"E4"}, {"D4"}, {"C4"}, {"D4"},
+	{"E4"}, {"E4"}, {"E4"}, {"E4"},
+	{"D4"}, {"D4"}, {"E4"}, {"D4"},
+	{"C4"}, {"C4"}, {"C4"}, {"C4"},
+}
+
+-- You can enter either notes with or without octaves (but they must be consistent)
+-- e.g. SemitoneInterval('C', 'D') or SemitoneInterval('C4', 'D3')
+SemitoneInterval = function (note1, note2)
+	local temp1 = string.sub(note1, 1, 1)
+	local temp2 = string.sub(note2, 1, 1)
+	if string.sub(note1, 2, 2) == "#" then
+		temp1 = temp1 .. "#"
+	end
+	if string.sub(note2, 2, 2) == "#" then
+		temp2 = temp2 .. "#"
+	end
+	if string.match(note1, "[1234567890]") and string.match(note2, "[1234567890]") then
+		local octave1 = tonumber(string.sub(note1, -1))
+		local octave2 = tonumber(string.sub(note2, -1))
+		return p2n[temp2] - p2n[temp1] + (octave2 - octave1) * 12
+	else
+		return p2n[temp2] - p2n[temp1]
+	end
+end
+
+--print(SemitoneInterval('C4', 'D3'))
+
+Transpose = function (note, semitoneInterval)
+	local originalOctave = tonumber(string.sub(note, -1))
+	local newOctave = originalOctave + semitoneInterval // 12
+	if semitoneInterval < 0 then
+		newOctave = originalOctave + (semitoneInterval - 1) // 12 + 1
+	end
+
+	local tempInterval = semitoneInterval % 12
+	if semitoneInterval > 0 and p2n[string.sub(note, 1, -2)] + tempInterval > 12 then
+		newOctave = newOctave + 1
+	elseif semitoneInterval < 0 and p2n[string.sub(note, 1, -2)] + tempInterval - 12 < 1 then
+		newOctave = newOctave - 1
+	end
+
+	local newNote = n2p[(p2n[string.sub(note, 1, -2)] + semitoneInterval - 1) % 12 + 1]
+
+	return newNote .. tostring(newOctave)
+end
+
+--print(Transpose('C#4', -13))
+
+ChordAdaption = function (bar, originalChord, newChord, transposeUp)
+
+	local originalTonality = 'M'
+	if string.find(originalChord, 'm') then
+		originalTonality = 'm'
+	end
+	local newTonality = 'M'
+	if string.find(newChord, 'm') then
+		newTonality = 'm'
+	end
+
+	local originalChordNote = string.sub(originalChord, 1, 1)
+	if string.sub(originalChord, 2, 2) == "#" then
+		originalChordNote = originalChordNote .. "#"
+	end
+
+	local change3rd7th = {}
+	if originalTonality == 'M' and newTonality == 'm' then
+		table.insert(change3rd7th, {n2p[(p2n[originalChordNote] + 3) % 12 + 1], -1})
+		if string.find(originalChord, '7') and string.find(newChord, '7') then
+			table.insert(change3rd7th, {n2p[(p2n[originalChordNote] + 10) % 12 + 1], -1})
+		end
+	elseif originalTonality == 'm' and newTonality == 'M' then
+		table.insert(change3rd7th, {n2p[(p2n[originalChordNote] + 2) % 12 + 1], 1})
+		if string.find(originalChord, '7') and string.find(newChord, '7') then
+			table.insert(change3rd7th, {n2p[(p2n[originalChordNote] + 9) % 12 + 1], 1})
+		end
+	end
+
+	local semitoneInterval = 0
+	if transposeUp then
+		semitoneInterval = (SemitoneInterval(originalChord, newChord) + 12) % 12
+	else
+		semitoneInterval = (SemitoneInterval(originalChord, newChord) + 12) % 12 - 12
+	end
+
+	local newBar = {}
+	for _,note in ipairs(bar) do
+		local newNote
+		if #change3rd7th > 0 and string.sub(note, 1, -2) == change3rd7th[1][1] then
+			newNote = Transpose(note, semitoneInterval + change3rd7th[1][2]) 
+		elseif #change3rd7th > 1 and string.sub(note, 1, -2) == change3rd7th[2][1] then
+			newNote = Transpose(note, semitoneInterval + change3rd7th[2][2])
+		else
+			newNote = Transpose(note, semitoneInterval)
+		end
+		table.insert(newBar, newNote)
+	end
+
+	return newBar
+	
+end
+
+-- Test
+
+local barTemp = {
+	{"D5","A4","F#4","D4"}, -- D
+	{"D5","A4","F4","D4"}, -- Dm
+	{"F#5","D5","B4","G4"}, -- G7
+	{"F5","D5","A#4","G4"}, -- Gm7
+}
+
+local newBar
+newBar = ChordAdaption(barTemp[1], "D", "C", false)
+print("1", newBar[1], newBar[2], newBar[3], newBar[4])
+newBar = ChordAdaption(barTemp[1], "D", "Cm", false)
+print("2", newBar[1], newBar[2], newBar[3], newBar[4])
+newBar = ChordAdaption(barTemp[2], "Dm", "C", false)
+print("3", newBar[1], newBar[2], newBar[3], newBar[4])
+newBar = ChordAdaption(barTemp[2], "Dm", "Cm", false)
+print("4", newBar[1], newBar[2], newBar[3], newBar[4])
+newBar = ChordAdaption(barTemp[3], "G7", "D7", true)
+print("5", newBar[1], newBar[2], newBar[3], newBar[4])
+newBar = ChordAdaption(barTemp[3], "G7", "Dm7", true)
+print("6", newBar[1], newBar[2], newBar[3], newBar[4])
+newBar = ChordAdaption(barTemp[4], "Gm7", "D7", true)
+print("7", newBar[1], newBar[2], newBar[3], newBar[4])
+newBar = ChordAdaption(barTemp[4], "Gm7", "Dm7", true)
+print("8", newBar[1], newBar[2], newBar[3], newBar[4])
 
 -------------------------------------------------
 return MusicEditing
