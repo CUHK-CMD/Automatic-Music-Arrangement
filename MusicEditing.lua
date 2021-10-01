@@ -338,7 +338,7 @@ MusicEditing.Track = {
 					local splitEvent = sourceEvent.anotherEvent:clone()
 					splitEvent:setTime(sourceTrack:getBarTime(targetBarNumber))
 					self:addEvent(splitEvent)
-				elseif (sourceEvent.anotherEvent.time > sourceTrack:getBarTime(barNumber+barCount))
+				elseif (sourceEvent.anotherEvent.time >= sourceTrack:getBarTime(barNumber+barCount))
 				then
 					local splitEvent = sourceEvent.anotherEvent:clone()
 					splitEvent:setTime(sourceTrack:getBarTime(targetBarNumber+barCount))
