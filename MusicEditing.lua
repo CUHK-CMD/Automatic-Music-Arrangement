@@ -572,105 +572,41 @@ MusicEditing.Helper = {
 
 --chord adaption
 
-local notesTable = {
-	{{"E4"}, {"D4"}, {"C4"}, {"D4"}},
-	{"E4"}, {"E4"}, {"E4"}, {"E4"},
-	{"D4"}, {"D4"}, {"D4"}, {"D4"},
-	{"E4"}, {"G4"}, {"G4"}, {"G4"},
-	{"E4"}, {"D4"}, {"C4"}, {"D4"},
-	{"E4"}, {"E4"}, {"E4"}, {"E4"},
-	{"D4"}, {"D4"}, {"E4"}, {"D4"},
-	{"C4"}, {"C4"}, {"C4"}, {"C4"},
-}
-
--- You can enter either notes with or without octaves (but they must be consistent)
--- e.g. SemitoneInterval('C', 'D') or SemitoneInterval('C4', 'D3')
-SemitoneInterval = function (note1, note2)
-	local temp1 = string.sub(note1, 1, 1)
-	local temp2 = string.sub(note2, 1, 1)
-	if string.sub(note1, 2, 2) == "#" then
-		temp1 = temp1 .. "#"
-	end
-	if string.sub(note2, 2, 2) == "#" then
-		temp2 = temp2 .. "#"
-	end
-	if string.match(note1, "[1234567890]") and string.match(note2, "[1234567890]") then
-		local octave1 = tonumber(string.sub(note1, -1))
-		local octave2 = tonumber(string.sub(note2, -1))
-		return p2n[temp2] - p2n[temp1] + (octave2 - octave1) * 12
-	else
-		return p2n[temp2] - p2n[temp1]
-	end
-end
-
---print(SemitoneInterval('C4', 'D3'))
-
-Transpose = function (note, semitoneInterval)
-	local originalOctave = tonumber(string.sub(note, -1))
-	local newOctave = originalOctave + semitoneInterval // 12
-	if semitoneInterval < 0 then
-		newOctave = originalOctave + (semitoneInterval - 1) // 12 + 1
-	end
-
-	local tempInterval = semitoneInterval % 12
-	if semitoneInterval > 0 and p2n[string.sub(note, 1, -2)] + tempInterval > 12 then
-		newOctave = newOctave + 1
-	elseif semitoneInterval < 0 and p2n[string.sub(note, 1, -2)] + tempInterval - 12 < 1 then
-		newOctave = newOctave - 1
-	end
-
-	local newNote = n2p[(p2n[string.sub(note, 1, -2)] + semitoneInterval - 1) % 12 + 1]
-
-	return newNote .. tostring(newOctave)
-end
-
---print(Transpose('C#4', -13))
-
 ChordAdaption = function (bar, originalChord, newChord, transposeUp)
 
-	local originalTonality = 'M'
-	if string.find(originalChord, 'm') then
-		originalTonality = 'm'
-	end
-	local newTonality = 'M'
-	if string.find(newChord, 'm') then
-		newTonality = 'm'
+	local transposeUp = transposeUp or true
+	local originalRootPitch = originalChord[1]:getPitch()
+	local newRootPitch = newChord[1]:getPitch()
+
+	local semitoneIntervalDifference = (newRootPitch - originalRootPitch + 12) % 12
+	if transposeUp == false then
+		semitoneIntervalDifference = semitoneIntervalDifference - 12
 	end
 
-	local originalChordNote = string.sub(originalChord, 1, 1)
-	if string.sub(originalChord, 2, 2) == "#" then
-		originalChordNote = originalChordNote .. "#"
-	end
-
-	local change3rd7th = {}
-	if originalTonality == 'M' and newTonality == 'm' then
-		table.insert(change3rd7th, {n2p[(p2n[originalChordNote] + 3) % 12 + 1], -1})
-		if string.find(originalChord, '7') and string.find(newChord, '7') then
-			table.insert(change3rd7th, {n2p[(p2n[originalChordNote] + 10) % 12 + 1], -1})
+	local chordsemitoneIntervalDifference = {}
+	local chordLength = math.min(#originalChord, #newChord)
+	for i in 1, chordLength do
+		local temp = (newChord[i]:getPitch() - originalChord[i]:getPitch() + 12) % 12
+		if transposeUp == false then
+			temp = temp - 12
 		end
-	elseif originalTonality == 'm' and newTonality == 'M' then
-		table.insert(change3rd7th, {n2p[(p2n[originalChordNote] + 2) % 12 + 1], 1})
-		if string.find(originalChord, '7') and string.find(newChord, '7') then
-			table.insert(change3rd7th, {n2p[(p2n[originalChordNote] + 9) % 12 + 1], 1})
-		end
-	end
-
-	local semitoneInterval = 0
-	if transposeUp then
-		semitoneInterval = (SemitoneInterval(originalChord, newChord) + 12) % 12
-	else
-		semitoneInterval = (SemitoneInterval(originalChord, newChord) + 12) % 12 - 12
+		table.insert(chordsemitoneIntervalDifference, temp)
 	end
 
 	local newBar = {}
 	for _,note in ipairs(bar) do
-		local newNote
-		if #change3rd7th > 0 and string.sub(note, 1, -2) == change3rd7th[1][1] then
-			newNote = Transpose(note, semitoneInterval + change3rd7th[1][2]) 
-		elseif #change3rd7th > 1 and string.sub(note, 1, -2) == change3rd7th[2][1] then
-			newNote = Transpose(note, semitoneInterval + change3rd7th[2][2])
+		local newNote = note
+		local newNotePitch = newNote:getPitch()
+		local belongToChordNote = -1
+		for i,chordNote in ipairs(originalChord) do
+			if newNotePitch == chordNote:getPitch() then
+				belongToChordNote = i
+			end
+		end
+		if belongToChordNote == -1 then
+			newNote:setPitch(newNotePitch + semitoneIntervalDifference)
 		else
-			newNote = Transpose(note, semitoneInterval)
+			newNote:setPitch(newNotePitch + chordsemitoneIntervalDifference[belongToChordNote])
 		end
 		table.insert(newBar, newNote)
 	end
@@ -679,32 +615,4 @@ ChordAdaption = function (bar, originalChord, newChord, transposeUp)
 	
 end
 
--- Test
-
-local barTemp = {
-	{"D5","A4","F#4","D4"}, -- D
-	{"D5","A4","F4","D4"}, -- Dm
-	{"F#5","D5","B4","G4"}, -- G7
-	{"F5","D5","A#4","G4"}, -- Gm7
-}
-
-local newBar
-newBar = ChordAdaption(barTemp[1], "D", "C", false)
-print("1", newBar[1], newBar[2], newBar[3], newBar[4])
-newBar = ChordAdaption(barTemp[1], "D", "Cm", false)
-print("2", newBar[1], newBar[2], newBar[3], newBar[4])
-newBar = ChordAdaption(barTemp[2], "Dm", "C", false)
-print("3", newBar[1], newBar[2], newBar[3], newBar[4])
-newBar = ChordAdaption(barTemp[2], "Dm", "Cm", false)
-print("4", newBar[1], newBar[2], newBar[3], newBar[4])
-newBar = ChordAdaption(barTemp[3], "G7", "D7", true)
-print("5", newBar[1], newBar[2], newBar[3], newBar[4])
-newBar = ChordAdaption(barTemp[3], "G7", "Dm7", true)
-print("6", newBar[1], newBar[2], newBar[3], newBar[4])
-newBar = ChordAdaption(barTemp[4], "Gm7", "D7", true)
-print("7", newBar[1], newBar[2], newBar[3], newBar[4])
-newBar = ChordAdaption(barTemp[4], "Gm7", "Dm7", true)
-print("8", newBar[1], newBar[2], newBar[3], newBar[4])
-
--------------------------------------------------
 return MusicEditing
