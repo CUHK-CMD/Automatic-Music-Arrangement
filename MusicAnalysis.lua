@@ -61,15 +61,15 @@ end
 
 local numberOfChords = #chords
 
-for i = 1,numberOfChords do
-	if #chords[i] > 4 then
-		print(chords[i][1], chords[i][2], chords[i][3], chords[i][4], chords[i][5])
-		print("", n2p(chords[i][2]), n2p(chords[i][3]), n2p(chords[i][4]), n2p(chords[i][5]))
-	else
-		print(chords[i][1], chords[i][2], chords[i][3], chords[i][4])
-		print("", n2p(chords[i][2]), n2p(chords[i][3]), n2p(chords[i][4]))
-	end
-end
+-- for i = 1,numberOfChords do
+	-- if #chords[i] > 4 then
+		-- print(chords[i][1], chords[i][2], chords[i][3], chords[i][4], chords[i][5])
+		-- print("", n2p(chords[i][2]), n2p(chords[i][3]), n2p(chords[i][4]), n2p(chords[i][5]))
+	-- else
+		-- print(chords[i][1], chords[i][2], chords[i][3], chords[i][4])
+		-- print("", n2p(chords[i][2]), n2p(chords[i][3]), n2p(chords[i][4]))
+	-- end
+-- end
 
 -- Table of scales
 -- Used for estimateKey

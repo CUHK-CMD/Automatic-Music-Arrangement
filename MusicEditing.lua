@@ -260,63 +260,44 @@ MusicEditing.Track = {
 	end,
 	
 	updateNoteOnOffEventPairs = function (self)
-		--local originalTracks, timeDivision = LuaMidi.get_MIDI_tracks(filename);
-	local self = MusicEditing.Song.new(timeDivision)
-	
-	local tempo
-	local timeSignature
-	--print(self.tracks)
-		temp=0
-		temp1=0
-		A={}
-		B={}
-		--print(type(self))
-		for i, rawTrack in ipairs(self.tracks) do
-			--print("a")
-			for j, rawEvent in ipairs(rawTrack:get_events()) do
-				if (rawEvent.type=="note_on")
+		local queue = {{}}
+		for i, event in ipairs(self.events) do
+			--print(i, event, event.rawEvent.type)
+			if (event.rawEvent.type == "note_on")
+			then
+				local channel = event:getChannel()
+				local pitch = event:getPitch()
+				--print(channel, pitch)
+				if (queue[channel][pitch] == nil)
 				then
-					A[temp]=j
-					temp=temp+1
-				else
-					B[temp1]=j
-					temp1=temp1+1
+					queue[channel][pitch] = {element = {}, start = 1, final = 0}
 				end
-			--print(rawEvent.type, A[temp],B[temp1])
+				queue[channel][pitch].final = queue[channel][pitch].final + 1
+				queue[channel][pitch].element[queue[channel][pitch].final] = i
+			elseif (event.rawEvent.type == "note_off")
+			then
+				local channel = event:getChannel()
+				local pitch = event:getPitch()
+				--print("setanotherevent:", event, event.rawEvent.type, self.events[queue[channel][pitch].element[queue[channel][pitch].start]], self.events[queue[channel][pitch].element[queue[channel][pitch].start]].rawEvent.type)
+				event:setAnotherEvent(self.events[queue[channel][pitch].element[queue[channel][pitch].start]])
+				self.events[queue[channel][pitch].element[queue[channel][pitch].start]]:setAnotherEvent(event)
+				--print(self.events[queue[channel][pitch].element[queue[channel][pitch].start]], self.events[queue[channel][pitch].element[queue[channel][pitch].start]]:getPitch(), event, event:getPitch())
+				queue[channel][pitch].start = queue[channel][pitch].start + 1
 			end
 		end
-		temp=0
-		temp1=0
-		for i, rawTrack in ipairs(self.tracks) do
-			for j,rawEvent in ipairs(rawTrack:get_events()) do
-				if (event.rawtype=="note_on")
-				then
-					MusicEditing.rawEvent.setAnotherEvent(B[temp1])	
-					print(event.rawEvent.anotherEvent)
-					temp1=temp1+1
-				else
-					MusicEditing.rawEvent.setAnotherEvent(A[temp])
-					print(event.rawEvent.anotherEvent)
-					temp=temp+1	
-				end
-			end 
-		end
+		
 	end,
+	
 	-- Assume: time signature is a constant
 	-- TODO: support varying time signature
 	getBarTime = function(self, barNumber)
-		--print(self.song.timeSignature[1] * (4/self.song.timeSignature[2]) * (barNumber-1))
 		return self.song.timeSignature[1] * (4/self.song.timeSignature[2]) * (barNumber-1) 
 	end,
 
 	getBarEvents = function(self, barNumber, barCount)
 		local startTime = self:getBarTime(barNumber)
-		--print(barNumber)
-		--print(startTime)
-		--print(barCount)
 		local endTime = self:getBarTime(barNumber+barCount)
-		--print(endTime)
-		--print(barCount)	
+			
 		local events = {}
 		
 		for i, event in ipairs(self:getEvents()) do
@@ -344,54 +325,42 @@ MusicEditing.Track = {
 	
 	copyBarFrom = function(self, sourceTrack, barNumber, barCount, targetBarNumber)
 		local timeOffset = self:getBarTime(targetBarNumber)
-		--print(timeOffset)
-		--print(targetBarNumber)
 		local source = sourceTrack:getBarEvents(barNumber, barCount)
-		--print(sourceTrack)
 		for i, sourceEvent in ipairs(source) do
+			if (sourceEvent.anotherEvent ~= nil)
+			then
+				if (sourceEvent.anotherEvent.time < sourceTrack:getBarTime(barNumber))
+				then
+					local splitEvent = sourceEvent.anotherEvent:clone()
+					splitEvent:setTime(sourceTrack:getBarTime(targetBarNumber))
+					self:addEvent(splitEvent)
+				elseif (sourceEvent.anotherEvent.time >= sourceTrack:getBarTime(barNumber+barCount))
+				then
+					local splitEvent = sourceEvent.anotherEvent:clone()
+					splitEvent:setTime(sourceTrack:getBarTime(targetBarNumber+barCount))
+					self:addEvent(splitEvent)
+				end
+			end
 			local clonedEvent = sourceEvent:clone()
-			--print(clonedEvent)
 			clonedEvent:setTime(sourceEvent:getTime() - sourceTrack:getBarTime(barNumber) + timeOffset)
 			self:addEvent(clonedEvent)
 		end
-		temp=0
-		temp1=0
-		A={}
-		B={}
-		for i,event in ipairs(self.events) do
-			--print(i)
-			if (event.rawEvent.type=="note_on")
-			then
-				A[temp]=event.time
-				temp=temp+1
-			end
-			if (event.rawEvent.type=="note_off")
-			then
-				B[temp1]=event.time
-				temp1=temp1+1
-			end
-			--print("b")
-			--print(event.rawEvent.type)
-			--print(type(event.time))
-		end
-		--print(type(A[i]))
-		--print(self.song.timeDivision)
-		for i=0,temp,1 do
-			--print("i",i)
-			for j=math.ceil(A[i]),math.floor(B[i]),1 do
-				--print("j",j)
-				--print(type(math.ceil(A[i])))
-				if (j%4==0)
-				then
-					--NoteOnOffEvent.setAnotherEvent("note_on")
-                    --NoteOnOffEvent.setAnotherEvent("note_off")
-				end
-				--updateNoteOnOffEventPairs()
-			end
-		end
+		self:updateNoteOnOffEventPairs()
 		-- self:sortEventsByTime()
 	end,
 	
+	editPitchByBar = function(self, sourceTrack, barNumber, barCount, strIncrement)
+		local source = sourceTrack:getBarEvents(barNumber, barCount)
+		local pitchIncrement = tonumber(strIncrement)
+		for i, event in ipairs (source) do
+			if (event.rawEvent.type == "note_on")
+			then
+				event:setPitch(event:getPitch() + pitchIncrement)
+				event.anotherEvent:setPitch(event:getPitch())
+			end
+		end
+
+	end,
 	
 }
 setmetatable(MusicEditing.Track, { __index = Object })	-- inherits Object
@@ -575,8 +544,8 @@ MusicEditing.Helper = {
 ChordAdaption = function (bar, originalChord, newChord, transposeUp)
 
 	local transposeUp = transposeUp or true
-	local originalRootPitch = originalChord[1]:getPitch()
-	local newRootPitch = newChord[1]:getPitch()
+	local originalRootPitch = originalChord[1]
+	local newRootPitch = newChord[1]
 
 	local semitoneIntervalDifference = (newRootPitch - originalRootPitch + 12) % 12
 	if transposeUp == false then
@@ -585,8 +554,8 @@ ChordAdaption = function (bar, originalChord, newChord, transposeUp)
 
 	local chordsemitoneIntervalDifference = {}
 	local chordLength = math.min(#originalChord, #newChord)
-	for i in 1, chordLength do
-		local temp = (newChord[i]:getPitch() - originalChord[i]:getPitch() + 12) % 12
+	for i = 1, chordLength do
+		local temp = (newChord[i] - originalChord[i] + 12) % 12
 		if transposeUp == false then
 			temp = temp - 12
 		end
@@ -595,20 +564,22 @@ ChordAdaption = function (bar, originalChord, newChord, transposeUp)
 
 	local newBar = {}
 	for _,note in ipairs(bar) do
+		if note:isDerivedFrom(MusicEditing.NoteOnOffEvent) then
 		local newNote = note
 		local newNotePitch = newNote:getPitch()
 		local belongToChordNote = -1
-		for i,chordNote in ipairs(originalChord) do
-			if newNotePitch == chordNote:getPitch() then
-				belongToChordNote = i
+			for i,chordNote in ipairs(originalChord) do
+				if newNotePitch == chordNote then
+					belongToChordNote = i
+				end
 			end
+			if belongToChordNote == -1 then
+				newNote:setPitch(newNotePitch + semitoneIntervalDifference)
+			else
+				newNote:setPitch(newNotePitch + chordsemitoneIntervalDifference[belongToChordNote])
+			end
+			table.insert(newBar, newNote)
 		end
-		if belongToChordNote == -1 then
-			newNote:setPitch(newNotePitch + semitoneIntervalDifference)
-		else
-			newNote:setPitch(newNotePitch + chordsemitoneIntervalDifference[belongToChordNote])
-		end
-		table.insert(newBar, newNote)
 	end
 
 	return newBar
