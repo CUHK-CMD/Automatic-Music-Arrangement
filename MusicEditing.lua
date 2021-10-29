@@ -575,6 +575,7 @@ ChordAdaption = function (bar, originalChord, newChord, transposeUp)
 			end
 			if belongToChordNote == -1 then
 				newNote:setPitch(newNotePitch + semitoneIntervalDifference)
+				
 			else
 				newNote:setPitch(newNotePitch + chordsemitoneIntervalDifference[belongToChordNote])
 			end
