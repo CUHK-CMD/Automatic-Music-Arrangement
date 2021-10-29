@@ -14,7 +14,7 @@ local Helper = MusicEditing.Helper
 ------------------------------------------------------------
 local style = dofile("test-style.lua")
 
-local melodySong = Song.buildFromFile("style-resources.mid")
+local melodySong = Song.buildFromFile("c-major-chord.mid")
 -- local melodySong = Song.buildFromFile("Debug/tempo-test.mid")
 -- local melodySong = Song.buildFromFile("c_major_scale.mid")
 -- local melodySong = Song.buildFromFile("offset-2.mid")
@@ -63,5 +63,5 @@ local arrangementContext = ArrangementContext.new(
 )
 -- melodySong:export("test.mid")
 -- style.arrange(arrangementContext)
-ChordAdaption(melodyTrack:getBarEvents(1, 4), chordC, chordEm)
+ChordAdaption(melodyTrack:getBarEvents(1, 1), chordC, chordEm)
 melodySong:export("test.mid")
