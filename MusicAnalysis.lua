@@ -130,42 +130,45 @@ local MusicAnalysis = {}
 MusicAnalysis.MusicAnalyser = {
 	estimateKey = function (self)
 		-- TO BE IMPLEMENTED
+
+		local barNum = self.melodyTrack:getBarCount()
+		local notesTable = self.melodyTrack:getBarEvents(1, barNum)
+
 		local scores = {
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 		}
-
-		-- Q1: To save all notes of bars in the music as a notesTable
-		-- notesTable = self:???
 		
 		for _,note in ipairs(notesTable) do
-			local notePitch = note:getPitch() % 12 + 1
-			for j,scale in ipairs(scales) do
-				local appeared = false
-		
-				-- Calculate the score measuring the matchability of the notes with a scale
-				for k,scaleNote in ipairs(scale) do
-					if notePitch == n2p(scaleNote) then
-						appeared = true
-						-- If the note is the key note (e.g. C of CM/m), 4 marks gained
-						if k == 2
-						then
-							scores[j] = scores[j] + 3
-						-- If the note is a 3rd note (e.g. E of CM, D# of Cm), subdominant (e.g. F of CM/m)
-						-- or dominant (e.g. G of CM/m), 2 marks gained
-						elseif k >= 4 and k <= 6
-						then
-							scores[j] = scores[j] + 2
-						-- If the note does not belong to the above attributes but belongs to the scale,
-						-- 1 mark gained
-						else
-							scores[j] = scores[j] + 1
+			if note:isDerivedFrom(MusicEditing.NoteOnOffEvent) and note.isNoteOn then
+				local notePitch = note:getPitch() % 12 + 1
+				for j,scale in ipairs(scales) do
+					local appeared = false
+			
+					-- Calculate the score measuring the matchability of the notes with a scale
+					for k,scaleNote in ipairs(scale) do
+						if notePitch == n2p(scaleNote) then
+							appeared = true
+							-- If the note is the key note (e.g. C of CM/m), 4 marks gained
+							if k == 2
+							then
+								scores[j] = scores[j] + 3
+							-- If the note is a 3rd note (e.g. E of CM, D# of Cm), subdominant (e.g. F of CM/m)
+							-- or dominant (e.g. G of CM/m), 2 marks gained
+							elseif k >= 4 and k <= 6
+							then
+								scores[j] = scores[j] + 2
+							-- If the note does not belong to the above attributes but belongs to the scale,
+							-- 1 mark gained
+							else
+								scores[j] = scores[j] + 1
+							end
 						end
 					end
-				end
-				-- If the note does not belong to the scale, 1 mark deducted
-				if appeared == false then
-					scores[j] = scores[j] - 1
+					-- If the note does not belong to the scale, 1 mark deducted
+					if appeared == false then
+						scores[j] = scores[j] - 1
+					end
 				end
 			end
 		end
@@ -183,20 +186,22 @@ MusicAnalysis.MusicAnalyser = {
 	estimateChordProgression = function (self)
 		-- TO BE IMPLEMENTED
 
-		-- Q2: To save all notes of each bar in the music as a barTable
-		-- barTable = self:???
+		local barNum = self.melodyTrack:getBarCount()
 
 		local chordProgression = {}
 
-		for _,bar in ipairs(barTable) do
-			if type(bar[1]) == "table" then
-				local tempChordProgression = {}
-				for _,barSegment in ipairs(bar) do
-					table.insert(tempChordProgression, Harmonize(barSegment))
+		for i = 1,barNum do
+			local bar = self.melodyTrack:getBarEvents(i, 1)
+			local tempBar = {}
+			for _,note in ipairs(bar) do
+				if note:isDerivedFrom(MusicEditing.NoteOnOffEvent) and note.isNoteOn then
+					table.insert(tempBar, note)
 				end
-				table.insert(chordProgression, tempChordProgression)
-			else
+			end
+			if #tempBar > 0 then
 				table.insert(chordProgression, Harmonize(bar))
+			else
+				table.insert(chordProgression, {})
 			end
 		end
 
