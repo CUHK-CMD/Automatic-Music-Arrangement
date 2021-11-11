@@ -565,11 +565,12 @@ ChordAdaption = function (bar, originalChord, newChord, transposeUp)
 	local newBar = {}
 	for _,note in ipairs(bar) do
 		if note:isDerivedFrom(MusicEditing.NoteOnOffEvent) then
-		local newNote = note
-		local newNotePitch = newNote:getPitch()
-		local belongToChordNote = -1
+			local newNote = note
+			local newNotePitch = newNote:getPitch()
+			local belongToChordNote = -1
 			for i,chordNote in ipairs(originalChord) do
-				if newNotePitch == chordNote then
+				--print(newNotePitch, chordNote)
+				if newNotePitch % 12 + 1 == chordNote then
 					belongToChordNote = i
 				end
 			end
