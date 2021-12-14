@@ -63,9 +63,9 @@ for i in ipairs(scales) do
 	end
 end
 
-for i = 1,24 do
-	print(scales[i][1], scales[i][2], scales[i][3], scales[i][4], scales[i][5], scales[i][6], scales[i][7], scales[i][8])
-end
+-- for i = 1,24 do
+--	print(scales[i][1], scales[i][2], scales[i][3], scales[i][4], scales[i][5], scales[i][6], scales[i][7], scales[i][8])
+-- end
 
 function TableConcat(t1,t2)
     for i=1,#t2 do
@@ -74,26 +74,26 @@ function TableConcat(t1,t2)
     return t1
 end
 
+function TableCopy(t)
+	local t2 = {}
+	for k,v in pairs(t) do
+		t2[k] = v
+	end
+	return t2
+end
+
 -- Harmonize all notes inside a table and return the chord
 
 function Harmonize (notesTable)
 
 	local scores = {}
-	
-	for _ = 1,numberOfChords do
-		table.insert(scores, 0)
-	end
 
 	for i = 1,numberOfChords do
-		local tempChord = chords[i]
+		local tempChord = TableCopy(chords[i])
 		table.remove(tempChord, 1)
 		local match = 0
-		local appeared = {}
-		for _,_ in ipairs(tempChord) do
-			table.insert(appeared, 0)
-		end
-		for _,note in ipairs(notesTable) do
-			local notePitch = note:getPitch() % 12 + 1
+		local appeared = {0, 0, 0, 0}
+		for _,notePitch in ipairs(notesTable) do
 			for j,chordNotePitch in ipairs(tempChord) do
 				if notePitch == chordNotePitch then
 					if j == 1 then
@@ -112,15 +112,17 @@ function Harmonize (notesTable)
 		local appearSum = appeared[1] + appeared[2] + appeared[3] + appeared[4]
 		table.insert(scores, appearSum * match)
 	end
-	
 	local maxChord = 1
 	for i = 2,numberOfChords do
+		--print(scores[i])
 		if scores[i] > scores[maxChord] then
 			maxChord = i
 		end
 	end
-	local tempChord = chords[maxChord]
+	--print(chords[1][1], chords[1][2], chords[1][3], chords[1][4])
+	local tempChord = TableCopy(chords[maxChord])
 	table.remove(tempChord, 1)
+	--print(tempChord[1])
 	return tempChord
 
 end
@@ -132,6 +134,7 @@ MusicAnalysis.MusicAnalyser = {
 		-- TO BE IMPLEMENTED
 
 		local barNum = self.melodyTrack:getBarCount()
+		-- local notesTable = self.melodyTrack:getBarEvents(1, barNum)
 		local notesTable = self.melodyTrack:getBarEvents(1, barNum)
 
 		local scores = {
@@ -142,12 +145,14 @@ MusicAnalysis.MusicAnalyser = {
 		for _,note in ipairs(notesTable) do
 			if note:isDerivedFrom(MusicEditing.NoteOnOffEvent) and note.isNoteOn then
 				local notePitch = note:getPitch() % 12 + 1
+				-- print(notePitch)
 				for j,scale in ipairs(scales) do
 					local appeared = false
 			
 					-- Calculate the score measuring the matchability of the notes with a scale
 					for k,scaleNote in ipairs(scale) do
-						if notePitch == n2p(scaleNote) then
+						--print(notePitch, scaleNote)
+						if notePitch == p2n(scaleNote) then
 							appeared = true
 							-- If the note is the key note (e.g. C of CM/m), 4 marks gained
 							if k == 2
@@ -174,6 +179,7 @@ MusicAnalysis.MusicAnalyser = {
 		end
 		local maxKey = 1
 		for i = 2,24 do
+			--print(scores[i])
 			if scores[i] > scores[maxKey] then
 				maxKey = i
 			end
@@ -195,11 +201,12 @@ MusicAnalysis.MusicAnalyser = {
 			local tempBar = {}
 			for _,note in ipairs(bar) do
 				if note:isDerivedFrom(MusicEditing.NoteOnOffEvent) and note.isNoteOn then
-					table.insert(tempBar, note)
+					--print(note:getPitch() % 12 + 1)
+					table.insert(tempBar, note:getPitch() % 12 + 1)
 				end
 			end
 			if #tempBar > 0 then
-				table.insert(chordProgression, Harmonize(bar))
+				table.insert(chordProgression, Harmonize(tempBar))
 			else
 				table.insert(chordProgression, {})
 			end
