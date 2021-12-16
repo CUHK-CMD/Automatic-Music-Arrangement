@@ -174,7 +174,7 @@ MusicEditing.Song.buildFromFile = function(filename, ignoreNonNoteEvent)
 	
 	local tempo
 	local timeSignature
-	
+
 	for i, rawTrack in ipairs(originalTracks) do
 		if tempo == nil then
 			tempo = rawTrack:get_tempo()
@@ -484,7 +484,7 @@ MusicEditing.NoteOnOffEvent.buildFromRawEvent = function (song, time, rawEvent)
 	self.anotherEvent = nil
 	return setmetatable(self, { __index = MusicEditing.NoteOnOffEvent })
 end
-
+	
 -------------------------------------------------
 ---- Class: MusicEditing.ArrangementContext
 -------------------------------------------------
@@ -542,6 +542,53 @@ MusicEditing.Helper = {
 	end,
 }
 
+--chord adaption
 
--------------------------------------------------
+ChordAdaption = function (bar, originalChord, newChord, transposeUp)
+
+	local transposeUp = transposeUp or true
+	local originalRootPitch = originalChord[1]
+	local newRootPitch = newChord[1]
+
+	local semitoneIntervalDifference = (newRootPitch - originalRootPitch + 12) % 12
+	if transposeUp == false then
+		semitoneIntervalDifference = semitoneIntervalDifference - 12
+	end
+
+	local chordsemitoneIntervalDifference = {}
+	local chordLength = math.min(#originalChord, #newChord)
+	for i = 1, chordLength do
+		local temp = (newChord[i] - originalChord[i] + 12) % 12
+		if transposeUp == false then
+			temp = temp - 12
+		end
+		table.insert(chordsemitoneIntervalDifference, temp)
+	end
+
+	local newBar = {}
+	for _,note in ipairs(bar) do
+		if note:isDerivedFrom(MusicEditing.NoteOnOffEvent) then
+			local newNote = note
+			local newNotePitch = newNote:getPitch()
+			local belongToChordNote = -1
+			for i,chordNote in ipairs(originalChord) do
+				--print(newNotePitch, chordNote)
+				if newNotePitch % 12 + 1 == chordNote then
+					belongToChordNote = i
+				end
+			end
+			if belongToChordNote == -1 then
+				newNote:setPitch(newNotePitch + semitoneIntervalDifference)
+				
+			else
+				newNote:setPitch(newNotePitch + chordsemitoneIntervalDifference[belongToChordNote])
+			end
+			table.insert(newBar, newNote)
+		end
+	end
+
+	return newBar
+	
+end
+
 return MusicEditing

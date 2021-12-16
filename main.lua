@@ -164,6 +164,10 @@ function readArguments() -- 2nd function it will read the FULL arguments in the 
 end
 
 function mainRun()	--main part for the running of program, after checking it is error-free
+	local melodySong = Song.buildFromFile("c-major-chord.mid")
+	-- local melodySong = Song.buildFromFile("Debug/tempo-test.mid")
+	-- local melodySong = Song.buildFromFile("c_major_scale.mid")
+	-- local melodySong = Song.buildFromFile("offset-2.mid")
 	local melodyTrack = melodySong:getTracks()[#melodySong:getTracks()]
 
 	local song = Song.new(
