@@ -122,7 +122,7 @@ function readArguments() -- 2nd function it will read the FULL arguments in the 
 		return false
 	elseif (arg[1] == nil)
 	then
-		print("Please input proper argument for input and output! Use command \"-h\" or \"-help\" for more details")
+		print("Please input proper argument for input and output! Use command \"-h\" or \"--help\" for more details")
 		return false
 	else
 		argnumber = 1
@@ -155,7 +155,7 @@ function readArguments() -- 2nd function it will read the FULL arguments in the 
 			end
 			if (arguments["settings"] == nil)
 			then
-				print("Setting file is missing!")
+				print("Settings file is missing!")
 			end
 			return false
 		end
@@ -164,7 +164,8 @@ function readArguments() -- 2nd function it will read the FULL arguments in the 
 end
 
 function mainRun()	--main part for the running of program, after checking it is error-free
-	local melodySong = Song.buildFromFile("c-major-chord.mid")
+
+	local melodySong = Song.buildFromFile("Debug/country-road-short-a-major.mid")
 	-- local melodySong = Song.buildFromFile("Debug/tempo-test.mid")
 	-- local melodySong = Song.buildFromFile("c_major_scale.mid")
 	-- local melodySong = Song.buildFromFile("offset-2.mid")
