@@ -3,48 +3,15 @@ local Object = require "Object"
 
 local Helper = MusicEditing.Helper
 
--- processed song template (I think main.lua will pass to me but I don't know the format yet)
-
-local timeSignature = 4
-
-local notesTable = {
-	{"E4"}, {"D4"}, {"C4"}, {"D4"},
-	{"E4"}, {"E4"}, {"E4"}, {"E4"},
-	{"D4"}, {"D4"}, {"D4"}, {"D4"},
-	{"E4"}, {"G4"}, {"G4"}, {"G4"},
-	{"E4"}, {"D4"}, {"C4"}, {"D4"},
-	{"E4"}, {"E4"}, {"E4"}, {"E4"},
-	{"D4"}, {"D4"}, {"E4"}, {"D4"},
-	{"C4"}, {"C4"}, {"C4"}, {"C4"},
-}
-
--- processed song template end
-
 local p2n = Helper.pitchNameToNumber
 local n2p = Helper.pitchNumberToName
-
--- Table of chords
--- I assume there are no inversions first, but it can be easily implemented
-
--- Old hard coded chords
---local chords = {
---	{"C",  p2n("C"), p2n("E"), p2n("G")},
---	{"Dm", p2n("D"), p2n("F"), p2n("A")},
---	{"Em", p2n("E"), p2n("G"), p2n("B")},
---	{"F",  p2n("F"), p2n("A"), p2n("C")},
---	{"G",  p2n("G"), p2n("B"), p2n("D")},
---	{"Am", p2n("A"), p2n("C"), p2n("E")},
---	{"Bo", p2n("B"), p2n("D"), p2n("F")},
---}
-
 local chords = {}
-
 local chordsInterval = {
-	{"", 0, 4, 7},
-	{"7", 0, 4, 7, 11},
-	{"m", 0, 3, 7},
-	{"o", 0, 3, 6},
-	{"+", 0, 4, 8}
+	{"M", 0, 4, 7},     -- M
+	{"7", 0, 4, 7, 11}, -- 7
+	{"m", 0, 3, 7},     -- m
+	{"o", 0, 3, 6},     -- o
+	{"+", 0, 4, 8}      -- +
 }
 
 for i = 1,12 do
@@ -61,15 +28,15 @@ end
 
 local numberOfChords = #chords
 
--- for i = 1,numberOfChords do
-	-- if #chords[i] > 4 then
-		-- print(chords[i][1], chords[i][2], chords[i][3], chords[i][4], chords[i][5])
-		-- print("", n2p(chords[i][2]), n2p(chords[i][3]), n2p(chords[i][4]), n2p(chords[i][5]))
-	-- else
-		-- print(chords[i][1], chords[i][2], chords[i][3], chords[i][4])
-		-- print("", n2p(chords[i][2]), n2p(chords[i][3]), n2p(chords[i][4]))
-	-- end
--- end
+--for i = 1,numberOfChords do
+--	if #chords[i] > 4 then
+--		print(chords[i][1], chords[i][2], chords[i][3], chords[i][4], chords[i][5])
+--		print("", n2p(chords[i][2]), n2p(chords[i][3]), n2p(chords[i][4]), n2p(chords[i][5]))
+--	else
+--		print(chords[i][1], chords[i][2], chords[i][3], chords[i][4])
+--		print("", n2p(chords[i][2]), n2p(chords[i][3]), n2p(chords[i][4]))
+--	end
+--end
 
 -- Table of scales
 -- Used for estimateKey
@@ -96,9 +63,9 @@ for i in ipairs(scales) do
 	end
 end
 
---for i = 1,8 do
---	print(scales[22][i])
---end
+-- for i = 1,24 do
+--	print(scales[i][1], scales[i][2], scales[i][3], scales[i][4], scales[i][5], scales[i][6], scales[i][7], scales[i][8])
+-- end
 
 function TableConcat(t1,t2)
     for i=1,#t2 do
@@ -107,101 +74,85 @@ function TableConcat(t1,t2)
     return t1
 end
 
-local MusicAnalysis = {}
-
-local progression = {}
-
--- Update 20/8: Old harmonize function, ignore it
-function Harmonize_old (bar, frequency, isFirst)
-
-	local barSegment = {}
-	local beatLeft = bar
-	local barSize = #bar
-	while barSize > 0 do
-		for i=1,frequency do
-			if bar[1] then
-				for _,note in bar[1] do
-					table.insert(barSegment, note)
-				end
-				table.remove(beatLeft, 1)
-				barSize = barSize - 1
-			else
-				break
-			end		
-		end
-		-- Match
-		local chords = {}
-		-- Match end
-		if isFirst then
-			local progression = {}
-			table.insert(progression, chords)
-		end
-		--Harmonize(beatLeft, frequency, false)
+function TableCopy(t)
+	local t2 = {}
+	for k,v in pairs(t) do
+		t2[k] = v
 	end
-
-	-- Group the notes of beats with a certain number
-	-- For beatGroup == n, we concat all notes of the first n beats as a subset
-	-- We harmonize this subset and pass the remain
-	local beatGroup = frequency
-	
-	--while #bar >= frequency do
-		
-	--end
-	return 0
+	return t2
 end
 
--- Harmonize bar by bar
+-- Harmonize all notes inside a table and return the chord
 
-function Harmonize (bar)
+function Harmonize (notesTable)
 
 	local scores = {}
+
 	for i = 1,numberOfChords do
+		local tempChord = TableCopy(chords[i])
+		table.remove(tempChord, 1)
 		local match = 0
-		local appeared = {0, 0, 0}
-		for _,note in ipairs(bar) do
-			local temp = string.sub(note, 1, string.len(note) - 1)
-			if p2n(temp) == chords[i][2] then
-				match = match + 2
-				appeared[1] = 1
-			elseif p2n(temp) == chords[i][3] then
-				match = match + 1
-				appeared[2] = 1
-			elseif p2n(temp) == chords[i][4] then
-				match = match + 2
-				appeared[3] = 1
+		local appeared = {0, 0, 0, 0}
+		for _,notePitch in ipairs(notesTable) do
+			for j,chordNotePitch in ipairs(tempChord) do
+				if notePitch == chordNotePitch then
+					if j == 1 then
+						match = match + 2
+					elseif j == 2 then
+						match = match + 1
+					elseif j == 3 then
+						match = match + 2
+					elseif j == 4 then
+						match = match + 1
+					end
+					appeared[j] = 1
+				end
 			end
 		end
-		local appearSum = appeared[1] + appeared[2] + appeared[3]
+		local appearSum = appeared[1] + appeared[2] + appeared[3] + appeared[4]
 		table.insert(scores, appearSum * match)
 	end
-	
 	local maxChord = 1
 	for i = 2,numberOfChords do
+		--print(scores[i])
 		if scores[i] > scores[maxChord] then
 			maxChord = i
 		end
 	end
-	return chords[maxChord][1]
+	--print(chords[1][1], chords[1][2], chords[1][3], chords[1][4])
+	local tempChord = TableCopy(chords[maxChord])
+	table.remove(tempChord, 1)
+	--print(tempChord[1])
+	return tempChord
 
 end
+
+local MusicAnalysis = {}
 
 MusicAnalysis.MusicAnalyser = {
 	estimateKey = function (self)
 		-- TO BE IMPLEMENTED
+
+		local barNum = self.melodyTrack:getBarCount()
+		-- local notesTable = self.melodyTrack:getBarEvents(1, barNum)
+		local notesTable = self.melodyTrack:getBarEvents(1, barNum)
+
 		local scores = {
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 		}
-		for _,notes in ipairs(notesTable) do
-			for _,note in ipairs(notes) do
-				local temp = string.sub(note, 1, string.len(note) - 1)
-				--print(temp)
+		
+		for _,note in ipairs(notesTable) do
+			if note:isDerivedFrom(MusicEditing.NoteOnOffEvent) and note.isNoteOn then
+				local notePitch = note:getPitch() % 12 + 1
+				-- print(notePitch)
 				for j,scale in ipairs(scales) do
 					local appeared = false
 			
 					-- Calculate the score measuring the matchability of the notes with a scale
 					for k,scaleNote in ipairs(scale) do
-						if temp == scaleNote then
+						--print(notePitch, scaleNote)
+						if notePitch == p2n(scaleNote) then
 							appeared = true
 							-- If the note is the key note (e.g. C of CM/m), 4 marks gained
 							if k == 2
@@ -226,66 +177,45 @@ MusicAnalysis.MusicAnalyser = {
 				end
 			end
 		end
-		--for j in ipairs(scales) do
-		--	print(scales[j][1], scores[j])
-		--end
 		local maxKey = 1
 		for i = 2,24 do
+			--print(scores[i])
 			if scores[i] > scores[maxKey] then
 				maxKey = i
 			end
 		end
-		return scales[maxKey][1]
+		local key = scales[maxKey]
+		table.remove(key, 1)
+		return key
 	end,
 	
 	estimateChordProgression = function (self)
 		-- TO BE IMPLEMENTED
 
-		-- By default, we count the beat by quarter note, so beat per bar is equals to the timeSignature
-		-- For songs which timeSignature is a small, you might not want to count the beat by quarter note,
-		-- so we can set timeSignature by the multiple of the actual one at main.lua
-		-- Notes:
-		-- This number is actually used in the preprocessing part, which is not implemented at this moment
+		local barNum = self.melodyTrack:getBarCount()
 
-		-- The starting beat of the first bar, by default is 1
-		local startingBeat = 1
-
-		-- The frequency of harmonizing the notes, beat as unit
-		-- e.g. If we want to harmonize the notes beat by beat, we can set frequency = 1
-		--      If we want to harmonzie the notes bar by bar, we can set frequency = timeSignature
-		-- Notes:
-		-- We will try all combinations by grouping the notes of beats with multiple of frequency
-		-- e.g. For timeSignature == 4 and frequency == 1, we will group the notes as:
-		--          {1, 1, 1, 1}, {1, 1, 2}, {1, 2, 1}, {1, 3},
-		--          {2, 1, 1}, {2, 2},
-		--          {3, 1},
-		--          {4}
-		--      For timeSignature == 4 and frequency == 2, we will group the notes as:
-		--          {2, 2}, {4}
-		-- Therefore, frequency should be a factor of timeSignature (at the current version)
-		-- And you might see, for frequency == 1, the combination of {2, 2} still appear, which means
-		-- you can simply set frequency = 1 to get all combinations (although it might be slower)
-		-- local frequency = 1
-		-- Update 21/8: The frequency is not required because we harmonize base on the timeSignature
-
-		local i = 1
-		local beatNum = #notesTable
-		local tempBar = {}
 		local chordProgression = {}
-		while i <= beatNum do
-			for _,note in ipairs(notesTable[i]) do
-				table.insert(tempBar, note)
-			end
 
-			if (startingBeat + i - 1) % timeSignature == 0 or i == beatNum then
-				table.insert(chordProgression, Harmonize(tempBar))
-				tempBar = {}
+		for i = 1,barNum do
+			local bar = self.melodyTrack:getBarEvents(i, 1)
+			local tempBar = {}
+			for _,note in ipairs(bar) do
+				if note:isDerivedFrom(MusicEditing.NoteOnOffEvent) and note.isNoteOn then
+					--print(note:getPitch() % 12 + 1)
+					table.insert(tempBar, note:getPitch() % 12 + 1)
+				end
 			end
-			i = i + 1
+			if #tempBar > 0 then
+				table.insert(chordProgression, Harmonize(tempBar))
+			else
+				table.insert(chordProgression, {})
+			end
 		end
+
 		return chordProgression
 	end
 }
+
 setmetatable(MusicAnalysis.MusicAnalyser, { __index = Object })	-- inherits Object
 MusicAnalysis.MusicAnalyser.new = function (melodyTrack)
 	local self = {
