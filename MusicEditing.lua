@@ -341,7 +341,7 @@ MusicEditing.Track = {
 				elseif (sourceEvent.anotherEvent.time >= sourceTrack:getBarTime(barNumber+barCount))
 				then
 					local splitEvent = sourceEvent.anotherEvent:clone()
-					splitEvent:setTime(sourceTrack:getBarTime(targetBarNumber+barCount))
+					splitEvent:setTime(sourceTrack:getBarTime(targetBarNumber+barCount)-0.0001)
 					self:addEvent(splitEvent)
 				end
 			end
@@ -365,6 +365,47 @@ MusicEditing.Track = {
 		end
 
 	end,
+	
+	adaptChord = function (self, barNumber, barCount, originalChord, newChord, transposeUp)
+		local transposeUp = transposeUp or true
+		local originalRootPitch = originalChord[1]
+		local newRootPitch = newChord[1]
+
+		local semitoneIntervalDifference = (newRootPitch - originalRootPitch + 12) % 12
+		if transposeUp == false then
+			semitoneIntervalDifference = semitoneIntervalDifference - 12
+		end
+
+		local chordsemitoneIntervalDifference = {}
+		local chordLength = math.min(#originalChord, #newChord)
+		for i = 1, chordLength do
+			local temp = (newChord[i] - originalChord[i] + 12) % 12
+			if transposeUp == false then
+				temp = temp - 12
+			end
+			table.insert(chordsemitoneIntervalDifference, temp)
+		end
+
+		for _, note in ipairs(self:getBarEvents(barNumber, barCount)) do
+			if note:isDerivedFrom(MusicEditing.NoteOnOffEvent) then
+				local newNotePitch = note:getPitch()
+				local belongToChordNote = -1
+				for i,chordNote in ipairs(originalChord) do
+					--print(newNotePitch, chordNote)
+					if newNotePitch % 12 + 1 == chordNote then
+						belongToChordNote = i
+					end
+				end
+				if belongToChordNote == -1 then
+					note:setPitch(newNotePitch + semitoneIntervalDifference)
+				else
+					note:setPitch(newNotePitch + chordsemitoneIntervalDifference[belongToChordNote])
+					
+				end
+			end
+		end
+		
+	end
 }
 setmetatable(MusicEditing.Track, { __index = Object })	-- inherits Object
 MusicEditing.Track.new = function (song, name, instrument)

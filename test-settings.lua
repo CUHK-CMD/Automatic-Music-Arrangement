@@ -1,5 +1,5 @@
 return {
 	sectionSeparation = {
-		{ "Default", 0 }
+		{ "default", 0 }
 	}
 }

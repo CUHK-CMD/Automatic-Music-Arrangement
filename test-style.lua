@@ -17,6 +17,7 @@ local style = {
 	resourceFilename = "style-resources.mid",
 	
 	arrange = function (arrangementContext)
+	
 		local melodyTrack = arrangementContext.melodyTrack
 		local melodyBarCount = melodyTrack:getBarCount()
 	
@@ -32,7 +33,7 @@ local style = {
 		for i = 1, melodyBarCount do
 			local sectionName = arrangementContext:getSectionNameByBar(i)
 			
-			if sectionName == "intro" then
+			if sectionName == "intro" or sectionName == "default" then
 				local clipBarCount = 2
 				drumTrack:copyBarFrom(resourceDrumTrack, 5 + (i-1) % clipBarCount, 1, i)
 				
@@ -53,6 +54,31 @@ local style = {
 		end
 		
 		arrangementContext.song:addTrack(drumTrack)
+		
+		local guitarTrack = Track.new(arrangementContext.song, "Guitar")
+		local resourceGuitarTrack = arrangementContext.resourceSong:findTrackByName("Guitar")
+	
+		local p2n = MusicEditing.Helper.pitchNameToNumber
+
+		local chordG = { p2n("G"), p2n("B"), p2n("D") }
+		local chordEm = { p2n("E"), p2n("G"), p2n("B") }
+		local chordD = { p2n("D"), p2n("F#"), p2n("A") }
+		local chordC = { p2n("C"), p2n("E"), p2n("G") }
+		local chordF = { p2n("F"), p2n("A"), p2n("C") }
+		local chordC7 = { p2n("C"), p2n("E"), p2n("G"), p2n("A#") }
+	
+		for i = 1, melodyBarCount do
+			local sectionName = arrangementContext:getSectionNameByBar(i)
+			
+			if sectionName == "default" then
+				local chord = arrangementContext.chordProgression[i]
+				guitarTrack:copyBarFrom(resourceGuitarTrack, 1, 1, i)
+				guitarTrack:adaptChord(i, 1, chordC, chord)
+			end
+		end
+		
+		arrangementContext.song:addTrack(guitarTrack)
+		print(#arrangementContext.song:getTracks())
 	end,
 }
 

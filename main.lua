@@ -170,6 +170,13 @@ function mainRun()	--main part for the running of program, after checking it is 
 	-- local melodySong = Song.buildFromFile("c_major_scale.mid")
 	-- local melodySong = Song.buildFromFile("offset-2.mid")
 	local melodyTrack = melodySong:getTracks()[#melodySong:getTracks()]
+	
+	local analyser = MusicAnalysis.MusicAnalyser.new(melodyTrack)
+	local key = analyser:estimateKey()
+	local chordProgression = analyser:estimateChordProgression()
+	for i = 1, #chordProgression do
+		print(#chordProgression[i])
+	end
 
 	local song = Song.new(
 		melodySong:getTimeDivision(),
@@ -189,19 +196,9 @@ function mainRun()	--main part for the running of program, after checking it is 
 	local arrangementContext = ArrangementContext.new(
 		song,
 		melodyTrack,
-		settings.key or { p2n("A"), p2n("B"), p2n("C#"), p2n("D"), p2n("E"), p2n("F#"), p2n("G#") }, --soon replaced by MusicAnalysis.MusicAnalyser.estimateKey(song)
-		settings.chordProgression or {
-			chordG, chordEm, chordD, chordC, 
-			
-			chordG, chordEm, chordD, {chordC, chordG},
-			chordG, chordEm, chordD, {chordC, chordG},
-			
-			chordG, chordD, chordEm, chordC,
-			chordG, chordD, chordC, chordG,
-			
-			chordG
-		},	--soon replaced by MusicAnalysis.MusicAnalyser.estimateChordProgression(song)
-			settings.sectionSeparation,
+		settings.key or key,
+		settings.chordProgression or chordProgression,
+		settings.sectionSeparation,
 		Song.buildFromFile(style.resourceFilename)
 	)
 

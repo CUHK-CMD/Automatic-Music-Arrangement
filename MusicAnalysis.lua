@@ -208,7 +208,7 @@ MusicAnalysis.MusicAnalyser = {
 			if #tempBar > 0 then
 				table.insert(chordProgression, Harmonize(tempBar))
 			else
-				table.insert(chordProgression, {})
+				table.insert(chordProgression, chordProgression[#chordProgression])	-- copy last bar's chord
 			end
 		end
 
