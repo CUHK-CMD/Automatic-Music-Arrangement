@@ -18,6 +18,9 @@ local style = {
 	
 	arrange = function (arrangementContext)
 	
+		local p2n = MusicEditing.Helper.pitchNameToNumber
+		local chordC = { p2n("C"), p2n("E"), p2n("G") }
+	
 		local melodyTrack = arrangementContext.melodyTrack
 		local melodyBarCount = melodyTrack:getBarCount()
 	
@@ -26,6 +29,8 @@ local style = {
 		
 		arrangementContext.song:addTrack(leadTrack)
 		
+		-----------------------------------------------------
+		
 		local drumTrack = Track.new(arrangementContext.song, "Drum")
 		local resourceDrumTrack = arrangementContext.resourceSong:findTrackByName("Drum")
 		
@@ -33,19 +38,16 @@ local style = {
 		for i = 1, melodyBarCount do
 			local sectionName = arrangementContext:getSectionNameByBar(i)
 			
-			if sectionName == "intro" or sectionName == "default" then
-				local clipBarCount = 2
-				drumTrack:copyBarFrom(resourceDrumTrack, 5 + (i-1) % clipBarCount, 1, i)
-				
-			elseif sectionName == "verse" then
+			if sectionName == "verse" then
 				local clipBarCount = 2
 				drumTrack:copyBarFrom(resourceDrumTrack, 3 + (i-1) % clipBarCount, 1, i)
 				
-			elseif sectionName == "chrous" then
+			elseif sectionName == "chorus" then
 				local clipBarCount = 2
-				drumTrack:copyBarFrom(resourceDrumTrack, 7 + (i-1) % clipBarCount, 1, i)
+				drumTrack:copyBarFrom(resourceDrumTrack, 5 + (i-1) % clipBarCount, 1, i)
 			
 			elseif sectionName == "outro" then	-- ASSUME: outro ends within a bar
+			
 				-- local clipBarCount = 0.5
 				drumTrack:copyBarFrom(resourceDrumTrack, 9, 0.5, i)
 				drumTrack:copyBarFrom(resourceDrumTrack, 9, 0.5, i + 0.5)
@@ -55,30 +57,48 @@ local style = {
 		
 		arrangementContext.song:addTrack(drumTrack)
 		
+		-----------------------------------------------------
 		local guitarTrack = Track.new(arrangementContext.song, "Guitar")
+		guitarTrack:setInstrument(25)
 		local resourceGuitarTrack = arrangementContext.resourceSong:findTrackByName("Guitar")
-	
-		local p2n = MusicEditing.Helper.pitchNameToNumber
-
-		local chordG = { p2n("G"), p2n("B"), p2n("D") }
-		local chordEm = { p2n("E"), p2n("G"), p2n("B") }
-		local chordD = { p2n("D"), p2n("F#"), p2n("A") }
-		local chordC = { p2n("C"), p2n("E"), p2n("G") }
-		local chordF = { p2n("F"), p2n("A"), p2n("C") }
-		local chordC7 = { p2n("C"), p2n("E"), p2n("G"), p2n("A#") }
 	
 		for i = 1, melodyBarCount do
 			local sectionName = arrangementContext:getSectionNameByBar(i)
 			
-			if sectionName == "default" then
+			if sectionName == "chorus" then
 				local chord = arrangementContext.chordProgression[i]
 				guitarTrack:copyBarFrom(resourceGuitarTrack, 1, 1, i)
+				guitarTrack:adaptChord(i, 1, chordC, chord)
+			else
+				local chord = arrangementContext.chordProgression[i]
+				guitarTrack:copyBarFrom(resourceGuitarTrack, 4, 1, i)
 				guitarTrack:adaptChord(i, 1, chordC, chord)
 			end
 		end
 		
 		arrangementContext.song:addTrack(guitarTrack)
-		print(#arrangementContext.song:getTracks())
+		
+		-----------------------------------------------------
+		local bassTrack = Track.new(arrangementContext.song, "Bass")
+		local resourceBassTrack = arrangementContext.resourceSong:findTrackByName("Bass")
+	
+		for i = 1, melodyBarCount do
+			local sectionName = arrangementContext:getSectionNameByBar(i)
+			
+			if sectionName == "chorus" then
+				local chord = arrangementContext.chordProgression[i]
+				bassTrack:copyBarFrom(resourceBassTrack, 2, 1, i)
+				bassTrack:adaptChord(i, 1, chordC, chord)
+			else
+				local chord = arrangementContext.chordProgression[i]
+				bassTrack:copyBarFrom(resourceBassTrack, 1, 1, i)
+				bassTrack:adaptChord(i, 1, chordC, chord)
+			end
+		end
+		
+		arrangementContext.song:addTrack(bassTrack)
+		-- print(arrangementContext.song:getInfo())
+		-- print(arrangementContext.resourceSong:getInfo())
 	end,
 }
 

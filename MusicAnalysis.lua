@@ -131,8 +131,6 @@ local MusicAnalysis = {}
 
 MusicAnalysis.MusicAnalyser = {
 	estimateKey = function (self)
-		-- TO BE IMPLEMENTED
-
 		local barNum = self.melodyTrack:getBarCount()
 		-- local notesTable = self.melodyTrack:getBarEvents(1, barNum)
 		local notesTable = self.melodyTrack:getBarEvents(1, barNum)
@@ -184,14 +182,20 @@ MusicAnalysis.MusicAnalyser = {
 				maxKey = i
 			end
 		end
-		local key = scales[maxKey]
+		local key = TableCopy(scales[maxKey])
+		
 		table.remove(key, 1)
+		
+		for i = 1, #key do
+			key[i] = p2n(key[i])
+		end
+		
 		return key
 	end,
 	
 	estimateChordProgression = function (self)
-		-- TO BE IMPLEMENTED
-
+		local key = self:estimateKey()
+	
 		local barNum = self.melodyTrack:getBarCount()
 
 		local chordProgression = {}
@@ -208,7 +212,7 @@ MusicAnalysis.MusicAnalyser = {
 			if #tempBar > 0 then
 				table.insert(chordProgression, Harmonize(tempBar))
 			else
-				table.insert(chordProgression, chordProgression[#chordProgression])	-- copy last bar's chord
+				table.insert(chordProgression, chordProgression[#chordProgression] or { key[1], key[3], key[5] })
 			end
 		end
 

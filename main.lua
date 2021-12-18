@@ -24,7 +24,7 @@ function readFlags(flag, argnum) -- called by readArguments(), help to process t
 			arguments[flag] = arg[argnum+1]
 			if (not pcall(Song.buildFromFile, arguments[flag]))
 			then
-				print("Error: ", arguments[flag], " not found!")
+				print("Error: " .. arguments[flag] .. " not found!")
 				return false
 			end
 			melodySong = Song.buildFromFile(arguments[flag])
@@ -42,7 +42,7 @@ function readFlags(flag, argnum) -- called by readArguments(), help to process t
 			arguments[flag] = arg[argnum+1]
 			if (not pcall(dofile, arguments[flag]))
 			then
-				print("Error! ", arguments[flag], " not found!")
+				print("Error! " .. arguments[flag] .. " not found or the file is invalid!")
 				return false
 			end
 			style = dofile(arguments[flag]) 
@@ -72,7 +72,7 @@ function readFlags(flag, argnum) -- called by readArguments(), help to process t
 			arguments[flag] = arg[argnum+1]
 			if (not pcall(dofile, arguments[flag]))
 			then
-				print("Error: ", arguments[flag], " not found!")
+				print("Error: " .. arguments[flag] .. " not found or the file is invalid!")
 				return false
 			end
 			settings = dofile(arguments[flag])
@@ -92,20 +92,20 @@ function readFlags(flag, argnum) -- called by readArguments(), help to process t
 		helporversion = true
 		if (argnum ~= 1 or arg[2] ~= nil)
 		then
-			print("Please use",flag,"flag in single argument!")
+			print("Please use " .. flag .. " flag in single argument!")
 			return false
 		elseif (flag == "-h" or flag == "--help")
 		then
-			print("	-h, --help (Please use it in a single argument)\n",
+			print("-h, --help (Please use it in a single argument)\n",
 			"-v, --version (Please use it in a single argument)\n",
 			"-i, --input MELODY_FILE_PATH\n",
 			"-s, --style STYLE_FILE_PATH\n",
 			"-o, --output OUTPUT_FILE_PATH\n",
 			"-c, --settings SETTINGS_FILE_PATH\n",
-			"example: Lua main.lua -i melody.mid -o arrangement.mid -s style.lua -c settings.lua")
+			"Example: Lua main.lua -i melody.mid -o arrangement.mid -s style.lua -c settings.lua")
 			return false
 		else
-			print("Version 0")
+			print("Version 1.0")
 			return false
 		end
 	else
@@ -165,7 +165,7 @@ end
 
 function mainRun()	--main part for the running of program, after checking it is error-free
 
-	local melodySong = Song.buildFromFile("Debug/country-road-short-a-major.mid")
+	-- local melodySong = Song.buildFromFile("country-road-melody-short.mid")
 	-- local melodySong = Song.buildFromFile("Debug/tempo-test.mid")
 	-- local melodySong = Song.buildFromFile("c_major_scale.mid")
 	-- local melodySong = Song.buildFromFile("offset-2.mid")
@@ -174,9 +174,14 @@ function mainRun()	--main part for the running of program, after checking it is 
 	local analyser = MusicAnalysis.MusicAnalyser.new(melodyTrack)
 	local key = analyser:estimateKey()
 	local chordProgression = analyser:estimateChordProgression()
-	for i = 1, #chordProgression do
-		print(#chordProgression[i])
-	end
+	
+	-- local n2p = Helper.pitchNumberToName
+	-- for i = 1, #chordProgression do
+		-- for j = 1, #chordProgression[i] do
+			-- io.write(n2p(chordProgression[i][j]) .. "\t")
+		-- end
+		-- io.write("\n")
+	-- end
 
 	local song = Song.new(
 		melodySong:getTimeDivision(),
@@ -204,7 +209,7 @@ function mainRun()	--main part for the running of program, after checking it is 
 
 	style.arrange(arrangementContext)
 	song:export(arguments["output"])
-	print("Successfully saved as ", arguments["output"])
+	print("Successfully saved as " .. arguments["output"] .. ".")
 end
 
 --  Program Execution
