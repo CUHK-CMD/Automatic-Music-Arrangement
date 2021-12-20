@@ -22,12 +22,14 @@ Melody MIDI: [Link](Demo/canon-melody.mid)
 #### Example Style - Piano
 MIDI: [Link](Demo/canon-piano.mid)
 ![](Demo/canon-piano.png)
+
 https://user-images.githubusercontent.com/48320629/146743713-54f0d8be-f708-4674-a209-69d2b95643ef.mov
 
 
 #### Example Style - Rock
 MIDI: [Link](Demo/canon-rock.mid)
 ![](Demo/canon-rock.png)
+
 https://user-images.githubusercontent.com/48320629/146743133-31b68dbf-a4ef-4161-9de2-e8dcf70303a2.mov
 
 ### Melody 2 - Country Road
@@ -38,17 +40,13 @@ Melody MIDI: [Link](Demo/country-road-melody.mid)
 MIDI: [Link](Demo/country-road-piano.mid)
 ![](Demo/country-road-piano.png)
 
-
-#### Example Style - Rock
 https://user-images.githubusercontent.com/48320629/146744634-6e85fc74-f17f-4cfe-a71e-39346acfb77d.mov
 
-
+#### Example Style - Rock
 MIDI: [Link](Demo/country-road-rock.mid)
 ![](Demo/country-road-rock.png)
+
 https://user-images.githubusercontent.com/48320629/146744646-e2266056-6e16-4e2d-b192-7e78428cd994.mov
-
-
-
 
 ## How to Use
 This software requires Lua 5.3 to run. Also download the modified LuaMidi library down below and rename the folder as `LuaMidi` and place it under the root directory of this program.
