@@ -10,11 +10,7 @@ local style = {
 	name = "Style Example",
 	author = "Charles Ho",
 	version = "1.0",
-	-- tempo = 120,
-	-- signature = {4,4},
-	-- scales = {"major", "minor"},
-	-- sections = {"intro", "verse", "chrous", "outro"},
-	resourceFilename = "style-resources.mid",
+	resourceFilename = "style-resources-rock.mid",
 	
 	arrange = function (arrangementContext)
 	

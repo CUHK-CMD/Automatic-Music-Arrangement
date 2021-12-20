@@ -22,9 +22,10 @@ function readFlags(flag, argnum) -- called by readArguments(), help to process t
 		if (arguments[flag] == nil)
 		then
 			arguments[flag] = arg[argnum+1]
+			
 			if (not pcall(Song.buildFromFile, arguments[flag]))
 			then
-				print("Error: " .. arguments[flag] .. " not found!")
+				print("Error: " .. arguments[flag] .. " not found or the file is invalid!")
 				return false
 			end
 			melodySong = Song.buildFromFile(arguments[flag])
