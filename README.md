@@ -68,9 +68,9 @@ Note: Since this program does not utilise different MIDI channels for different 
 A melody file is a MIDI file with only one track (or else the last track will be chosen as the melody track). It is not neccessary for the melody track to be monophonic. Actually, the program would work better if there is harmonies.
 
 ### Style File
-A style file returns a table that contains basic information such as author name, version number, and most importantly an `arrange` that defines how should the program arrange the music based on the arrangement context (melody, key, chord progression, etc).
+A style file returns a table that contains basic information such as author name, version number, and most importantly an `arrange` function that defines how should the program arrange the music based on the arrangement context (melody, key, chord progression, etc).
 
-If you want to create your own style file, please read the provided example and the `MusicEditing` APIs.
+If you want to create your own style file, please read the provided examples and the `MusicEditing` APIs.
 
 ### Settings File
 A settings file is
