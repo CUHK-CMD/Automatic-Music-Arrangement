@@ -91,7 +91,7 @@ for overriding the information calculated by the program or defined by default. 
 - <b>Programmers:</b>
   - Sen-ho Choi (chord adpation and key & chord progression estimation)
   - Man-hin Lai (MIDI editing functions and CLI)
-  - Chun-sang Lam (MIDI editing)
+  - Chun-sang Lam (MIDI editing functions)
 
 ## Library
 This software utilised a modified version of LuaMidi: https://github.com/CUHK-CMD/LuaMidi
